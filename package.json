@@ -1,0 +1,13 @@
+{
+  "name": "aroma-kiosk",
+  "version": "1.0.0",
+  "description": "Aroma Cafe Self-Service Kiosk System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.1"
+  }
+}
