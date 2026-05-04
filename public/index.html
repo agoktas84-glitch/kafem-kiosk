@@ -554,7 +554,11 @@ function nextPager() {
 // ═══════════════════════════════════════════
 function show(id) { document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); }
 
-function goMenu() {
+async function goMenu() {
+  try {
+    const r = await fetch('/api/menu');
+    if (r.ok) { MENU = await r.json(); }
+  } catch(e) { console.warn('Sunucu hatasi:', e); }
   show('sm'); initOpts(); renderCats(); renderGrid(); renderRight();
 }
 
