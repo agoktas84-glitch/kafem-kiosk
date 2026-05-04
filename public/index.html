@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aroma Kiosk</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0F0D0A}
+:root{
+  --ink:#0F0D0A;--ink2:#3A3028;--ink3:#7A6E62;
+  --gold:#A07840;--goldl:#C4975A;
+  --cream:#FAF6EF;--parch:#F2EBD9;--div:#E2D8C8;
+  --surf:#fff;--ok:#2A6644;--err:#8B2020;--bar:#1E4D6B;
+}
+body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink)}
+.scr{display:none;position:fixed;inset:0;flex-direction:column;overflow:hidden}
+.scr.on{display:flex}
+
+/* WELCOME */
+#sw{background:var(--ink);align-items:center;justify-content:center;text-align:center}
+.wlines{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.wline{position:absolute;background:rgba(160,120,64,.07);width:1px;top:0;bottom:0}
+.wlw{display:flex;flex-direction:column;align-items:center;gap:22px;z-index:1;position:relative}
+.wrule{width:56px;height:1px;background:var(--gold);opacity:.6}
+.wbrand{font-family:'Cormorant Garamond',serif;font-size:clamp(44px,8vw,80px);font-weight:500;color:#fff;letter-spacing:10px;line-height:1}
+.wtag{font-size:11px;letter-spacing:3px;color:var(--goldl);text-transform:uppercase}
+.wcta{background:var(--gold);color:#fff;border:none;padding:18px 64px;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.wcta:hover{background:var(--goldl)}
+.ghost{position:fixed;bottom:0;left:0;width:70px;height:70px;cursor:pointer;z-index:99}
+.wbot{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--gold);opacity:.4}
+
+/* TOAST */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--ink2);color:var(--goldl);border:1px solid rgba(160,120,64,.4);padding:12px 28px;font-size:12px;letter-spacing:1px;z-index:9999;display:none;font-family:'Jost',sans-serif}
+
+/* PIN */
+.pinov{position:fixed;inset:0;background:rgba(15,13,10,.9);display:flex;align-items:center;justify-content:center;z-index:900}
+.pinov.h{display:none}
+.pinbox{background:var(--ink2);border:1px solid rgba(160,120,64,.3);padding:36px 32px;width:320px;text-align:center}
+.pintitle{font-family:'Cormorant Garamond',serif;font-size:24px;color:#fff;letter-spacing:2px;margin-bottom:4px}
+.pinsub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:24px}
+.pindots{display:flex;justify-content:center;gap:14px;margin-bottom:24px}
+.pd{width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(160,120,64,.3);transition:all .2s}
+.pd.f{background:var(--gold);border-color:var(--gold)}.pd.e{background:var(--err);border-color:var(--err)}
+.pingrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.pk{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:16px;font-family:'Jost',sans-serif;font-size:20px;cursor:pointer;transition:all .15s}
+.pk:hover{background:rgba(160,120,64,.2);border-color:rgba(160,120,64,.4)}.pk:active{transform:scale(.94)}
+.pdel{background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);padding:16px;font-size:16px;cursor:pointer}
+.pdel:hover{border-color:rgba(160,120,64,.4);color:var(--goldl)}
+.pcancel{background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'Jost',sans-serif;text-transform:uppercase;margin-top:8px}
+.perrmsg{font-size:11px;color:#e07070;margin-top:8px;min-height:16px}
+
+/* TOPBAR */
+.tb{background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;flex-shrink:0}
+.tbbrand{font-family:'Cormorant Garamond',serif;color:#fff;font-size:22px;font-weight:500;letter-spacing:5px}
+.tbsteps{display:flex;align-items:center;gap:6px}
+.tstep{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.5px}
+.tstep.on{color:var(--goldl)}
+.tstep-n{width:20px;height:20px;border-radius:50%;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px}
+.tstep.on .tstep-n{background:var(--gold);border-color:var(--gold);color:#fff}
+.tstep-sep{color:rgba(255,255,255,.2);margin:0 2px}
+
+/* MENU */
+#sm{background:var(--parch)}
+.kbody{flex:1;display:flex;overflow:hidden;min-height:0}
+.kleft{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.catbar{background:var(--surf);border-bottom:1px solid var(--div);display:flex;padding:0 18px;overflow-x:auto;flex-shrink:0}
+.catbar::-webkit-scrollbar{height:0}
+.cc{background:none;border:none;border-bottom:2px solid transparent;padding:13px 16px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);cursor:pointer;white-space:nowrap;transition:all .15s}
+.cc.on,.cc:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.mscroll{flex:1;overflow-y:auto;padding:16px 18px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.mcard{background:var(--surf);border:1px solid var(--div);display:flex;flex-direction:column;transition:border-color .15s;overflow:hidden}
+.mcard:hover{border-color:rgba(160,120,64,.4)}
+.mcard-img{width:100%;height:110px;background:var(--parch);display:flex;align-items:center;justify-content:center;font-size:52px;border-bottom:1px solid var(--div);flex-shrink:0}
+.mcard-body{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.mcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+.mcard-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--ink);line-height:1.2}
+.mcard-price{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);flex-shrink:0}
+.mcard-desc{font-size:11px;color:var(--ink3);line-height:1.5;flex:1}
+.mcard-opts{display:flex;flex-wrap:wrap;gap:4px}
+.mopt{background:var(--cream);border:1px solid var(--div);padding:3px 9px;font-size:10px;color:var(--ink3);cursor:pointer;font-family:'Jost',sans-serif;transition:all .12s;white-space:nowrap}
+.mopt.on{background:var(--ink);color:var(--goldl);border-color:var(--ink)}
+.mopt:hover:not(.on){border-color:var(--gold);color:var(--gold)}
+.mcard-ctrl{display:flex;align-items:center;gap:10px;padding-top:8px;border-top:1px solid var(--div);margin-top:auto}
+.ctrl-minus{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--div);background:var(--surf);color:var(--ink3);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ctrl-minus:hover{border-color:var(--gold);color:var(--gold)}
+.ctrl-num{font-family:'Cormorant Garamond',serif;font-size:20px;min-width:22px;text-align:center;color:var(--ink)}
+.ctrl-num.zero{color:var(--ink3);opacity:.3}
+.ctrl-plus{width:36px;height:36px;border-radius:50%;background:var(--gold);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
+.ctrl-plus:hover{background:var(--goldl)}.ctrl-plus:active{transform:scale(.92)}
+
+/* RIGHT PANEL */
+.kright{width:290px;flex-shrink:0;background:var(--surf);border-left:1px solid var(--div);display:flex;flex-direction:column;overflow:hidden}
+.krhead{padding:16px 20px 12px;border-bottom:1px solid var(--div);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.krtitle{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500}
+.krcount{background:var(--gold);color:#fff;border-radius:50%;width:22px;height:22px;font-size:11px;display:flex;align-items:center;justify-content:center}
+.kritems{flex:1;overflow-y:auto;min-height:0}
+.krempty{padding:40px 20px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.9}
+.krempty-em{font-size:30px;opacity:.2;margin-bottom:12px}
+.sitem{padding:11px 18px;border-bottom:1px solid var(--div);display:flex;align-items:flex-start;gap:10px}
+.sitem-em{font-size:20px;flex-shrink:0;margin-top:2px}
+.sitem-info{flex:1;min-width:0}
+.sitem-name{font-size:13px;font-weight:500}
+.sitem-opts{font-size:10px;color:var(--ink3);margin-top:2px;line-height:1.4}
+.sitem-bot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.sitem-ctrl{display:flex;align-items:center;gap:5px}
+.sc-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--div);background:none;color:var(--ink3);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.sc-btn:hover{border-color:var(--gold);color:var(--gold)}
+.sc-btn.p{background:var(--gold);border-color:var(--gold);color:#fff}
+.sc-btn.p:hover{background:var(--goldl)}
+.sc-num{font-size:13px;font-weight:500;min-width:16px;text-align:center}
+.sitem-price{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold)}
+.krfoot{border-top:1px solid var(--div);padding:14px 18px;background:var(--parch);flex-shrink:0}
+.ktl{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);padding:2px 0}
+.ktrule{height:1px;background:var(--div);margin:8px 0}
+.ktg{display:flex;justify-content:space-between;font-family:'Cormorant Garamond',serif;font-size:19px}
+.kpaybtn{width:100%;background:var(--gold);color:#fff;border:none;padding:14px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:11px;display:flex;align-items:center;justify-content:center;gap:8px}
+.kpaybtn:hover{background:var(--goldl)}
+
+/* PAYMENT */
+#sp{background:var(--cream)}
+.sh{background:var(--ink);padding:16px 24px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.bk{background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);width:34px;height:34px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bk:hover{border-color:var(--goldl);color:var(--goldl)}
+.shtitle{font-family:'Cormorant Garamond',serif;color:#fff;font-size:20px;font-weight:500;letter-spacing:2px}
+.pbody{flex:1;display:flex;overflow:hidden;min-height:0}
+.pleft{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.pright{width:270px;flex-shrink:0;background:var(--surf);border-left:1px solid var(--div);padding:18px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.pslbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.pm{background:var(--surf);border:1px solid var(--div);padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.pm.on{border-color:var(--gold);border-left:3px solid var(--gold)}
+.pm:hover{border-color:var(--gold)}
+.pmico{font-size:20px;width:34px;text-align:center;flex-shrink:0}
+.pmname{font-size:13px;font-weight:500}
+.pmsub{font-size:10px;color:var(--ink3);margin-top:2px}
+.posdev{background:var(--ink);overflow:hidden}
+.posscr{background:#0a1628;padding:20px;text-align:center;border-bottom:3px solid var(--gold)}
+.posscrlbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px}
+.posscramt{font-family:'Cormorant Garamond',serif;font-size:34px;color:#4ade80;letter-spacing:2px}
+.posscrsub{font-size:10px;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.5px}
+.posbody{padding:18px;text-align:center}
+.posico{font-size:36px;margin-bottom:10px}
+.posins{font-size:11px;color:rgba(255,255,255,.45);line-height:1.7}
+.posrule{width:36px;height:1px;background:rgba(160,120,64,.35);margin:12px auto}
+.posstatus{display:inline-flex;align-items:center;gap:6px;background:rgba(160,120,64,.1);border:1px solid rgba(160,120,64,.25);padding:6px 14px;font-size:10px;color:var(--goldl);letter-spacing:1px}
+.posdot{width:6px;height:6px;border-radius:50%;background:var(--goldl)}
+.posdot.pulse{animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.posconfbtn{width:100%;background:var(--ok);color:#fff;border:none;padding:15px;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.posconfbtn:hover{opacity:.88}
+.posconfbtn.proc{background:#1a3a55;pointer-events:none}
+.pr-ordbox{border:1px solid var(--div);padding:12px;text-align:center}
+.pr-ordlbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.pr-ordval{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--gold);letter-spacing:4px}
+.pr-pagerbox{background:rgba(30,77,107,.07);border:1px solid rgba(30,77,107,.2);padding:12px;text-align:center}
+.pr-pagerlbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--bar);margin-bottom:4px;opacity:.8}
+.pr-pagerval{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--bar);letter-spacing:4px}
+.pr-pagersub{font-size:10px;color:rgba(30,77,107,.6);margin-top:3px;line-height:1.5}
+.pr-sumbox{border:1px solid var(--div);padding:14px}
+.pr-sumtitle{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;margin-bottom:10px}
+.pr-item{display:flex;gap:6px;padding:5px 0;border-bottom:1px solid var(--div);font-size:11px;color:var(--ink2);align-items:center}
+.pr-item:last-child{border-bottom:none}
+.pr-ip{color:var(--gold);flex-shrink:0;font-family:'Cormorant Garamond',serif;font-size:12px}
+.pr-total{display:flex;justify-content:space-between;font-family:'Cormorant Garamond',serif;font-size:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--div)}
+.cpb{background:var(--ok);color:#fff;border:none;width:100%;padding:14px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.cpb:hover{opacity:.88}
+
+/* SUCCESS */
+#ss{background:var(--ink);overflow-y:auto}
+.ss-wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:28px 24px;gap:14px;text-align:center}
+.srule{width:40px;height:1px;background:var(--gold);opacity:.5;flex-shrink:0}
+.scheck{font-size:44px;color:var(--goldl)}
+.stitle{font-family:'Cormorant Garamond',serif;font-size:30px;color:#fff;font-weight:500;letter-spacing:2px}
+.ssub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--goldl)}
+.ss-nums{display:flex;gap:12px;width:100%;max-width:500px}
+.ss-nb{flex:1;border:1px solid rgba(255,255,255,.1);padding:16px 12px}
+.ss-nb.o{border-color:rgba(160,120,64,.4)}
+.ss-nb.pg{border-color:rgba(30,77,107,.5);background:rgba(30,77,107,.07)}
+.ss-nlbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px}
+.ss-nval{font-family:'Cormorant Garamond',serif;font-size:36px;letter-spacing:4px}
+.ss-nb.o .ss-nval{color:var(--goldl)}.ss-nb.pg .ss-nval{color:#7DB5D4}
+.ss-nsub{font-size:10px;margin-top:4px;line-height:1.5}
+.ss-nb.o .ss-nsub{color:rgba(255,255,255,.3)}.ss-nb.pg .ss-nsub{color:rgba(125,181,212,.55)}
+.krow{display:flex;gap:10px;width:100%;max-width:500px}
+.kc{flex:1;border:1px solid rgba(255,255,255,.1);padding:12px;text-align:center}
+.kc.m{border-color:rgba(160,120,64,.3)}.kc.b{border-color:rgba(30,77,107,.4)}
+.kcico{font-size:16px;margin-bottom:4px}
+.kct{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--goldl);font-weight:500}
+.kc.b .kct{color:#7DB5D4}
+.kcitems{font-size:10px;color:rgba(255,255,255,.3);margin-top:3px;line-height:1.5}
+.rcpt{background:#fff;width:100%;max-width:340px;text-align:left;font-family:'Courier New',monospace;font-size:11px;color:#111}
+.rhead{text-align:center;padding:12px 14px 8px;border-bottom:1px dashed #ccc}
+.rbrand{font-family:'Cormorant Garamond',serif;font-size:18px;letter-spacing:4px;color:#111}
+.rinfo{font-size:10px;color:#666;margin-top:2px;line-height:1.6}
+.rordnum{font-size:13px;font-weight:bold;color:#111;margin-top:6px;letter-spacing:2px}
+.rbody{padding:10px 14px}
+.rrow{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
+.rrow.nm{font-weight:bold;margin-top:5px}
+.rrow.sb{color:#555;font-size:10px;padding-left:8px}
+.rdiv{border-top:1px dashed #ccc;margin:7px 0}
+.rtotal{display:flex;justify-content:space-between;font-weight:bold;font-size:13px;padding:3px 0}
+.rpager{text-align:center;background:#0a1628;color:#7DB5D4;padding:10px;margin:0 14px 10px;font-size:11px;letter-spacing:1px}
+.rpager-num{font-size:24px;font-weight:bold;letter-spacing:4px;display:block;margin-top:4px;color:#fff}
+.rfoot{text-align:center;font-size:10px;color:#777;padding:8px 14px 12px;border-top:1px dashed #ccc;line-height:1.8}
+.nob{background:rgba(160,120,64,.15);border:1px solid rgba(160,120,64,.35);color:var(--goldl);padding:10px 32px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.nob:hover{background:rgba(160,120,64,.25)}
+
+/* ADMIN */
+#sadm{background:var(--cream)}
+.admtb{background:var(--ink2);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;flex-shrink:0}
+.admtbrand{font-family:'Cormorant Garamond',serif;color:#fff;font-size:17px;letter-spacing:2px}
+.admtabs{display:flex;background:var(--parch);border-bottom:1px solid var(--div);flex-shrink:0;overflow-x:auto}
+.admtabs::-webkit-scrollbar{height:0}
+.atab{background:none;border:none;border-bottom:2px solid transparent;padding:12px 16px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.atab.on,.atab:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.admbody{flex:1;overflow-y:auto;padding:18px 24px}
+.ami{background:var(--surf);border:1px solid var(--div);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.ami-em{font-size:22px;width:34px;text-align:center;flex-shrink:0}
+.ami-info{flex:1}.ami-name{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500}
+.ami-cat{font-size:10px;color:var(--ink3);margin-top:1px}
+.ami-price{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--gold);flex-shrink:0;margin-right:6px}
+.ami-tog{background:none;border:1px solid var(--div);color:var(--ink3);padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Jost',sans-serif;transition:all .15s}
+.ami-tog:hover{border-color:var(--gold);color:var(--gold)}
+.ami-del{background:none;border:1px solid rgba(139,32,32,.3);color:var(--err);padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Jost',sans-serif}
+.ami-del:hover{background:var(--err);color:#fff}
+.addform{background:var(--surf);border:1px solid var(--div);padding:18px;margin-bottom:18px}
+.addtitle{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;margin-bottom:12px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
+.flbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);margin-bottom:3px}
+.fi{width:100%;border:1px solid var(--div);padding:8px 11px;font-family:'Jost',sans-serif;font-size:12px;color:var(--ink);background:var(--cream)}
+.fi:focus{outline:none;border-color:var(--gold)}
+.addbtn{background:var(--ink);color:#fff;border:none;padding:10px 22px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px}
+.addbtn:hover{background:var(--gold)}
+.tag-ok{background:#eaf5ec;border:1px solid #b2d8b8;color:#2A6644;padding:5px 12px;font-size:11px;display:inline-block;margin-top:8px;margin-left:8px}
+.wsec{background:var(--surf);border:1px solid var(--div);padding:16px 18px;margin-bottom:10px}
+.wsec-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--div)}
+.witem{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--div)}
+.witem:last-child{border-bottom:none}
+.witem-label{font-size:12px;color:var(--ink2)}
+.witem-sub{font-size:10px;color:var(--ink3);margin-top:2px}
+.wsel{border:1px solid var(--div);padding:6px 10px;font-family:'Jost',sans-serif;font-size:11px;color:var(--ink);background:var(--cream);cursor:pointer}
+.savebtn{background:var(--ok);color:#fff;border:none;padding:10px 22px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:6px}
+.pager-display{background:var(--ink);padding:22px;text-align:center;margin-bottom:16px}
+.pager-dlbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px}
+.pager-dval{font-family:'Cormorant Garamond',serif;font-size:52px;color:#7DB5D4;letter-spacing:6px;line-height:1}
+.pager-dsub{font-size:11px;color:rgba(255,255,255,.3);margin-top:6px}
+.pager-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:10px 0}
+.pcell{background:var(--parch);border:1px solid var(--div);padding:7px 4px;text-align:center;font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--ink3);cursor:pointer;transition:all .15s}
+.pcell.used{background:var(--ink);color:rgba(255,255,255,.2);border-color:rgba(255,255,255,.08);cursor:default}
+.pcell.active{background:var(--bar);color:#fff;border-color:var(--bar)}
+.pcell.avail:hover{border-color:var(--gold);color:var(--gold)}
+.pager-reset{background:var(--err);color:#fff;border:none;padding:10px 20px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.pager-reset:hover{opacity:.85}
+.rpt-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.rpt-stat{background:var(--surf);border:1px solid var(--div);padding:14px 16px}
+.rpt-slbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+.rpt-sval{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink)}
+.rpt-sval.g{color:var(--gold)}
+.rpt-table{background:var(--surf);border:1px solid var(--div);overflow:hidden;margin-bottom:12px}
+.rpt-thead{background:var(--parch);border-bottom:1px solid var(--div);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 16px;gap:8px}
+.rpt-th{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3)}
+.rpt-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:11px 16px;gap:8px;border-bottom:1px solid var(--div);align-items:center}
+.rpt-row:last-child{border-bottom:none}.rpt-row:hover{background:var(--cream)}
+.rpt-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+.rpt-cat{font-size:10px;color:var(--ink3)}
+.rpt-td{font-size:13px;color:var(--ink2)}
+.rpt-td.g{color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:14px}
+.rpt-bw{height:4px;background:var(--div);border-radius:2px;margin-top:3px}
+.rpt-b{height:4px;background:var(--gold);border-radius:2px}
+.rpt-empty{padding:40px;text-align:center;color:var(--ink3);font-size:13px}
+.rpt-export{background:var(--ink);color:#fff;border:none;padding:10px 22px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.rpt-export:hover{background:var(--gold)}
+.rpt-clear{background:none;border:1px solid rgba(139,32,32,.3);color:var(--err);padding:10px 18px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-left:8px}
+.rpt-clear:hover{background:var(--err);color:#fff}
+.pin-row{display:flex;gap:8px;align-items:flex-end;margin-top:10px;flex-wrap:wrap}
+.pin-field{flex:1;min-width:90px}
+.conn-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.conn-dot.ok{background:#4ade80}.conn-dot.err{background:#f87171}.conn-dot.warn{background:#fbbf24}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- WELCOME -->
+<div id="sw" class="scr on">
+  <div class="wlines" id="wlns"></div>
+  <div class="wlw">
+    <div class="wrule"></div>
+    <div class="wtag" style="font-size:13px;letter-spacing:1px;text-transform:none;max-width:320px;text-align:center;line-height:1.6">Büyük bir şehri Mutlu Etmekten<br>daha güzel ne olabilir</div>
+    <div class="wbrand"><img src="kafem-logo.png" style="width:200px;" alt="KAFEMi"></div>
+    <div class="wtag">Konya</div>
+    <div class="wrule"></div>
+    <button class="wcta" onclick="goMenu()">Sipariş Ver</button>
+  </div>
+  <div class="ghost" onclick="openPin()"></div>
+  <div class="wbot"></div>
+</div>
+
+<!-- PIN -->
+<div class="pinov h" id="pinov">
+  <div class="pinbox">
+    <div class="pintitle">Yönetim Girişi</div>
+    <div class="pinsub">PIN kodunuzu girin</div>
+    <div class="pindots" id="pindots">
+      <div class="pd" id="d0"></div><div class="pd" id="d1"></div>
+      <div class="pd" id="d2"></div><div class="pd" id="d3"></div>
+    </div>
+    <div class="pingrid">
+      <button class="pk" onclick="pk('1')">1</button><button class="pk" onclick="pk('2')">2</button><button class="pk" onclick="pk('3')">3</button>
+      <button class="pk" onclick="pk('4')">4</button><button class="pk" onclick="pk('5')">5</button><button class="pk" onclick="pk('6')">6</button>
+      <button class="pk" onclick="pk('7')">7</button><button class="pk" onclick="pk('8')">8</button><button class="pk" onclick="pk('9')">9</button>
+      <button class="pdel" onclick="pdel()">⌫</button>
+      <button class="pk" onclick="pk('0')">0</button>
+      <button class="pk" onclick="pconf()" style="background:rgba(160,120,64,.2);border-color:rgba(160,120,64,.4);color:var(--goldl);font-size:12px">GİR</button>
+    </div>
+    <div class="perrmsg" id="perr"></div>
+    <button class="pcancel" onclick="closePin()">İptal</button>
+  </div>
+</div>
+
+<!-- MENU -->
+<div id="sm" class="scr">
+  <div class="tb">
+    <div class="tbbrand">KAFEMi</div>
+    <div class="tbsteps">
+      <div class="tstep on"><div class="tstep-n">1</div><span>Menü Seç</span></div>
+      <div class="tstep-sep">›</div>
+      <div class="tstep"><div class="tstep-n">2</div><span>Ödeme</span></div>
+    </div>
+  </div>
+  <div class="kbody">
+    <div class="kleft">
+      <div class="catbar" id="catbar"></div>
+      <div class="mscroll"><div class="mgrid" id="mgrid"></div></div>
+    </div>
+    <div class="kright">
+      <div class="krhead">
+        <div class="krtitle">Siparişiniz</div>
+        <div class="krcount" id="kcount" style="display:none">0</div>
+      </div>
+      <div class="kritems" id="kritems">
+        <div class="krempty"><div class="krempty-em">☕</div>Henüz ürün eklemediniz.<br><br><span style="font-size:10px;opacity:.6">Sol taraftan + ile ekleyin</span></div>
+      </div>
+      <div class="krfoot" id="krfoot" style="display:none">
+        <div class="ktl"><span>Ara toplam</span><span id="ksub">₺0</span></div>
+        <div class="ktl"><span>KDV %10</span><span id="kkdv">₺0</span></div>
+        <div class="ktrule"></div>
+        <div class="ktg"><span>Toplam</span><span id="ktot">₺0</span></div>
+        <button class="kpaybtn" onclick="goPayment()">Ödemeye Geç <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT -->
+<div id="sp" class="scr">
+  <div class="sh">
+    <button class="bk" onclick="goMenu()">←</button>
+    <div class="shtitle">Ödeme</div>
+    <div style="margin-left:auto"><div class="tbsteps"><div class="tstep"><div class="tstep-n">1</div><span>Menü</span></div><div class="tstep-sep">›</div><div class="tstep on"><div class="tstep-n">2</div><span>Ödeme</span></div></div></div>
+  </div>
+  <div class="pbody">
+    <div class="pleft">
+      <div>
+        <div class="pslbl">Ödeme yöntemi seçin</div>
+        <div class="pm on" id="pm-card" onclick="selPay('card')"><div class="pmico">💳</div><div><div class="pmname">Kredi / Banka Kartı</div><div class="pmsub">Temassız veya çipli · POS aktif</div></div></div>
+        <div class="pm" id="pm-qr" onclick="selPay('qr')"><div class="pmico">📱</div><div><div class="pmname">QR / Mobil Ödeme</div><div class="pmsub">Papara · Garanti Pay · Troy</div></div></div>
+      </div>
+      <div class="posdev" id="posdev">
+        <div class="posscr"><div class="posscrlbl">Ödenecek Tutar</div><div class="posscramt" id="posamt">₺0,00</div><div class="posscrsub" id="posscrsub">POS Cihazı Bekleniyor</div></div>
+        <div class="posbody"><div class="posico" id="posico">💳</div><div class="posins" id="posins">Kartınızı POS cihazına<br>yaklaştırın veya takın</div><div class="posrule"></div><div class="posstatus"><div class="posdot pulse"></div>POS Aktif · Ödeme Bekleniyor</div></div>
+        <button class="posconfbtn" id="posconfbtn" onclick="startPay()"><span id="posconftxt">Ödemeyi Onayla</span></button>
+      </div>
+    </div>
+    <div class="pright">
+      <div class="pr-ordbox"><div class="pr-ordlbl">Sipariş No</div><div class="pr-ordval" id="pordnum">#—</div></div>
+      <div class="pr-pagerbox" id="ppagerbox" style="display:none"><div class="pr-pagerlbl">Çağrı Cihazı</div><div class="pr-pagerval" id="ppagernum">—</div><div class="pr-pagersub" id="pr-pagersub-txt">Lütfen yan taraftan çağrı cihazınızı alınız.<br>Siparişiniz hazır olduğunda cihaza bildirim gelecektir.</div></div>
+      <div class="pr-sumbox"><div class="pr-sumtitle">Sipariş Özeti</div><div id="pritems"></div><div class="pr-total"><span>Toplam</span><span id="prtot">₺0</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="ss" class="scr">
+  <div class="ss-wrap">
+    <div class="srule"></div>
+    <div class="scheck">✓</div>
+    <div class="stitle">Sipariş Alındı!</div>
+    <div class="ssub">Ödeme Onaylandı</div>
+    <div class="ss-nums" id="ssnums"></div>
+    <div class="krow" id="krow"></div>
+    <div class="rcpt" id="rcptbox"></div>
+    <button class="nob" onclick="resetK()">Yeni Sipariş</button>
+    <div class="srule"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="sadm" class="scr">
+  <div class="admtb">
+    <div class="admtbrand">KAFEMi · Yönetim</div>
+    <button style="background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);padding:6px 12px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'Jost',sans-serif" onclick="show('sw')">← Çıkış</button>
+  </div>
+  <div class="admtabs">
+    <button class="atab on" id="tab-menu" onclick="admTab('menu')">Menü</button>
+    <button class="atab" id="tab-pager" onclick="admTab('pager')">Çağrı Cihazı</button>
+    <button class="atab" id="tab-report" onclick="admTab('report')">Rapor</button>
+    <button class="atab" id="tab-printer" onclick="admTab('printer')">Yazıcı & Fiş</button>
+    <button class="atab" id="tab-settings" onclick="admTab('settings')">Sistem</button>
+    <button class="atab" id="tab-pin" onclick="admTab('pin')">Güvenlik</button>
+  </div>
+  <div class="admbody" id="admbody"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// MERKEZI SUNUCU MODU
+// Tüm veriler Railway sunucusundan gelir
+// ═══════════════════════════════════════════
+const SERVER_URL = window.location.origin; // Otomatik URL
+
+const LS = {
+  get: (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// Sunucudan veri çek
+async function fetchFromServer(endpoint) {
+  try {
+    const r = await fetch(SERVER_URL + endpoint);
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('Sunucu hatası:', e.message); }
+  return null;
+}
+
+async function postToServer(endpoint, data) {
+  try {
+    const r = await fetch(SERVER_URL + endpoint, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('Sunucu hatası:', e.message); }
+  return null;
+}
+
+let MENU = LS.get('aroma_menu', [
+  {id:1,cat:"Kahve",name:"Espresso",desc:"Yoğun, saf İtalyan usulü",price:45,emoji:"☕",st:"bar",opts:{Boyut:["Tek","Çift"],Sıcaklık:["Sıcak","Serin"]},active:true},
+  {id:2,cat:"Kahve",name:"Latte",desc:"Kadifemsi sütlü espresso",price:65,emoji:"🥛",st:"bar",opts:{Boyut:["Küçük","Orta","Büyük"],Süt:["Tam yağlı","Yulaf","Badem"],Sıcaklık:["Sıcak","Soğuk"]},active:true},
+  {id:3,cat:"Kahve",name:"Cappuccino",desc:"Eşit espresso, süt ve köpük",price:60,emoji:"☕",st:"bar",opts:{Boyut:["Küçük","Orta"],Süt:["Tam yağlı","Yulaf"]},active:true},
+  {id:4,cat:"Kahve",name:"Türk Kahvesi",desc:"Geleneksel cezve usulü",price:50,emoji:"🫖",st:"bar",opts:{Şeker:["Şekersiz","Az","Orta","Çok"]},active:true},
+  {id:5,cat:"Soğuk",name:"Iced Latte",desc:"Buzlu espresso ve soğuk süt",price:70,emoji:"🧊",st:"bar",opts:{Boyut:["Orta","Büyük"],Süt:["Tam yağlı","Yulaf","Badem"]},active:true},
+  {id:6,cat:"Soğuk",name:"Cold Brew",desc:"18 saat soğuk demleme",price:75,emoji:"🥤",st:"bar",opts:{Servis:["Sade","Sütlü"]},active:true},
+  {id:7,cat:"Soğuk",name:"Limonata",desc:"Taze sıkılmış, nane ve buz",price:55,emoji:"🍋",st:"bar",opts:{Çeşit:["Sade","Naneli","Çilekli"]},active:true},
+  {id:8,cat:"Mutfak",name:"Kruvasan",desc:"Tereyağlı, çıtır Fransız usulü",price:45,emoji:"🥐",st:"mutfak",opts:{İçerik:["Sade","Çikolatalı","Kayısılı"]},active:true},
+  {id:9,cat:"Mutfak",name:"Avokado Toast",desc:"Ekşi maya, avokado, limon",price:95,emoji:"🥑",st:"mutfak",opts:{Ekmek:["Ekşi maya","Tam buğday"],Ek:["Sade","Yumurtalı"]},active:true},
+  {id:10,cat:"Mutfak",name:"Waffle",desc:"Şef özel, mevsim meyveleri",price:85,emoji:"🧇",st:"mutfak",opts:{Topping:["Çilek+Krema","Çikolata","Muz+Bal"]},active:true},
+  {id:11,cat:"Tatlı",name:"Cheesecake",desc:"New York usulü, orman meyveli",price:75,emoji:"🍰",st:"mutfak",opts:{},active:true},
+  {id:12,cat:"Tatlı",name:"Brownie",desc:"Sıcak çikolatalı, kavrulmuş fındıklı",price:55,emoji:"🍫",st:"mutfak",opts:{Servis:["Sade","Dondurmalı"]},active:true},
+  {id:13,cat:"Çay",name:"Filiz Çay",desc:"Doğu Karadeniz, demlik",price:30,emoji:"🍵",st:"bar",opts:{Dem:["Açık","Normal","Koyu"]},active:true},
+  {id:14,cat:"Çay",name:"Bitki Çayı",desc:"Nane-limon, ıhlamur, adaçayı",price:35,emoji:"🌿",st:"bar",opts:{Çeşit:["Nane-limon","Ihlamur","Adaçayı"]},active:true},
+]);
+
+let CFG = LS.get('aroma_cfg', {
+  pin: '1234',
+  bizName: 'KAFEMi',
+  bizMsg: 'Afiyet olsun · KAFEMi',
+  kdv: 10,
+  pagerMax: 24,
+  printerBar: 'Yazıcı 1 – Bar',
+  printerMutfak: 'Yazıcı 2 – Mutfak',
+  printerGuest: 'Yazıcı 3 – Kiosk',
+  printerProtocol: 'escpos',
+  printerConn: 'usb',
+  printerIp: '192.168.1.100',
+  printerPort: '9100',
+  serverUrl: 'http://localhost:3001',
+  posMode: 'sim',
+  posApiKey: ''
+});
+
+let SALES = LS.get('aroma_sales', {});
+let COUNTERS = LS.get('aroma_counters', { order: 0, pager: 0, usedPagers: [] });
+
+async function saveMenu() {
+  LS.set('aroma_menu', MENU); // yerel yedek
+  await postToServer('/api/menu', MENU); // sunucuya kaydet
+}
+async function saveCfg() {
+  LS.set('aroma_cfg', CFG);
+  await postToServer('/api/config', CFG);
+}
+function saveSales() { LS.set('aroma_sales', SALES); }
+async function saveCounters() {
+  LS.set('aroma_counters', COUNTERS);
+  await postToServer('/api/counters', COUNTERS);
+}
+
+// Sunucudan menü yükle
+async function loadMenuFromServer() {
+  const serverMenu = await fetchFromServer('/api/menu');
+  if (serverMenu && Array.isArray(serverMenu) && serverMenu.length > 0) {
+    MENU = serverMenu;
+    LS.set('aroma_menu', MENU);
+    console.log('[MENÜ] Sunucudan yüklendi: ' + MENU.length + ' ürün');
+  }
+}
+
+// Sunucudan sayaçları yükle
+async function loadCountersFromServer() {
+  const serverCtr = await fetchFromServer('/api/counters');
+  if (serverCtr) {
+    COUNTERS = serverCtr;
+    LS.set('aroma_counters', COUNTERS);
+  }
+}
+
+// Session state (sıfırlanır)
+let cart = {}, iOpts = {}, curCat = 'Tümü', payMeth = 'card';
+let curOrd = '', curPager = null, curHasMut = false, rptDate = tKey();
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function tKey() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(d) { return new Date(d).toLocaleDateString('tr-TR', {day:'numeric',month:'long',year:'numeric'}); }
+function p2(n) { return String(n).padStart(2,'0'); }
+function getTot() { return MENU.reduce((s,it)=>s+(cart[it.id]||0)*it.price,0); }
+function hasItems() { return MENU.some(it=>(cart[it.id]||0)>0); }
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.display='none', dur);
+}
+
+function nextOrd() { COUNTERS.order++; saveCounters(); return '#'+String(COUNTERS.order).padStart(3,'0'); }
+function nextPager() {
+  COUNTERS.pager++;
+  if (COUNTERS.pager > CFG.pagerMax) COUNTERS.pager = 1;
+  if (!COUNTERS.usedPagers.includes(COUNTERS.pager)) COUNTERS.usedPagers.push(COUNTERS.pager);
+  saveCounters();
+  return COUNTERS.pager;
+}
+
+// ═══════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════
+function show(id) { document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); }
+
+function goMenu() {
+  show('sm'); initOpts(); renderCats(); renderGrid(); renderRight();
+}
+
+function goPayment() {
+  if (!hasItems()) return;
+  curOrd = nextOrd();
+  curHasMut = MENU.some(it=>it.st==='mutfak'&&(cart[it.id]||0)>0);
+  curPager = curHasMut ? nextPager() : null;
+  show('sp');
+  const t = (getTot()*(1+CFG.kdv/100)).toFixed(2).replace('.',',');
+  document.getElementById('posamt').textContent = '₺'+t;
+  document.getElementById('pordnum').textContent = curOrd;
+  const pb = document.getElementById('ppagerbox');
+  if (curPager) { pb.style.display='block'; document.getElementById('ppagernum').textContent=p2(curPager); }
+  else pb.style.display='none';
+  renderPayRight();
+}
+
+function resetK() {
+  cart={}; iOpts={}; curCat='Tümü'; curOrd=''; curPager=null; curHasMut=false;
+  // Reset POS button
+  const btn=document.getElementById('posconfbtn');
+  if(btn){btn.classList.remove('proc');document.getElementById('posconftxt').textContent='Ödemeyi Onayla';}
+  show('sw');
+}
+
+// ═══════════════════════════════════════════
+// MENU RENDER
+// ═══════════════════════════════════════════
+function initOpts() {
+  MENU.forEach(it=>{
+    if(!iOpts[it.id]){iOpts[it.id]={};Object.keys(it.opts).forEach(k=>{iOpts[it.id][k]=it.opts[k][0]});}
+  });
+}
+function getCats() { return ['Tümü',...new Set(MENU.filter(i=>i.active).map(i=>i.cat))]; }
+function renderCats() {
+  document.getElementById('catbar').innerHTML = getCats().map(c=>`<button class="cc ${c===curCat?'on':''}" onclick="filt('${c}')">${c}</button>`).join('');
+}
+function filt(c) { curCat=c; renderCats(); renderGrid(); }
+
+function renderGrid() {
+  const items = (curCat==='Tümü'?MENU:MENU.filter(i=>i.cat===curCat)).filter(i=>i.active);
+  document.getElementById('mgrid').innerHTML = items.map(it=>{
+    const q=cart[it.id]||0, opts=iOpts[it.id]||{};
+    const optHTML = Object.entries(it.opts).map(([k,cs])=>cs.map(c=>`<span class="mopt ${opts[k]===c?'on':''}" onclick="setOpt(${it.id},'${k}','${c}')">${c}</span>`).join('')).join('');
+    return `<div class="mcard">
+      <div class="mcard-img">${it.emoji}</div>
+      <div class="mcard-body">
+        <div class="mcard-top"><div class="mcard-name">${it.name}</div><div class="mcard-price">₺${it.price}</div></div>
+        <div class="mcard-desc">${it.desc}</div>
+        ${optHTML?`<div class="mcard-opts">${optHTML}</div>`:''}
+        <div class="mcard-ctrl">
+          ${q>0?`<button class="ctrl-minus" onclick="ch(${it.id},-1)">−</button><span class="ctrl-num">${q}</span>`:`<span class="ctrl-num zero">0</span>`}
+          <button class="ctrl-plus" onclick="ch(${it.id},1)">+</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setOpt(id,k,v){if(!iOpts[id])iOpts[id]={};iOpts[id][k]=v;renderGrid();}
+function ch(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<0)cart[id]=0;renderGrid();renderRight();}
+
+function renderRight() {
+  const items = MENU.filter(it=>(cart[it.id]||0)>0);
+  const ri=document.getElementById('kritems'), rf=document.getElementById('krfoot'), kc=document.getElementById('kcount');
+  const tq = items.reduce((s,it)=>s+(cart[it.id]||0),0);
+  if (!items.length) {
+    ri.innerHTML=`<div class="krempty"><div class="krempty-em">☕</div>Henüz ürün eklemediniz.<br><br><span style="font-size:10px;opacity:.6">Sol taraftan + ile ekleyin</span></div>`;
+    rf.style.display='none'; kc.style.display='none'; return;
+  }
+  kc.textContent=tq; kc.style.display='flex';
+  ri.innerHTML = items.map(it=>{
+    const q=cart[it.id]||0, os=Object.values(iOpts[it.id]||{}).filter(Boolean).join(' · ');
+    return `<div class="sitem"><div class="sitem-em">${it.emoji}</div><div class="sitem-info"><div class="sitem-name">${it.name}</div>${os?`<div class="sitem-opts">${os}</div>`:''}<div class="sitem-bot"><div class="sitem-ctrl"><button class="sc-btn" onclick="ch(${it.id},-1)">−</button><span class="sc-num">${q}</span><button class="sc-btn p" onclick="ch(${it.id},1)">+</button></div><div class="sitem-price">₺${it.price*q}</div></div></div></div>`;
+  }).join('');
+  const sub=getTot(), kdv=sub*CFG.kdv/100, tot=sub+kdv;
+  document.getElementById('ksub').textContent='₺'+sub.toFixed(2);
+  document.getElementById('kkdv').textContent='₺'+kdv.toFixed(2);
+  document.getElementById('ktot').textContent='₺'+tot.toFixed(2);
+  rf.style.display='block';
+}
+
+function renderPayRight() {
+  const items = MENU.filter(it=>(cart[it.id]||0)>0);
+  document.getElementById('pritems').innerHTML = items.map(it=>`<div class="pr-item"><span>${it.emoji}</span><span style="flex:1;font-size:11px">${it.name} ×${cart[it.id]}</span><span class="pr-ip">₺${it.price*cart[it.id]}</span></div>`).join('');
+  document.getElementById('prtot').textContent='₺'+(getTot()*(1+CFG.kdv/100)).toFixed(2);
+}
+
+// ═══════════════════════════════════════════
+// PAYMENT
+// ═══════════════════════════════════════════
+function selPay(m) {
+  payMeth=m;
+  ['card','qr'].forEach(x=>document.getElementById('pm-'+x).classList.remove('on'));
+  document.getElementById('pm-'+m).classList.add('on');
+  const t=(getTot()*(1+CFG.kdv/100)).toFixed(2).replace('.',',');
+  const c={card:{ico:'💳',ins:'Kartınızı POS cihazına<br>yaklaştırın veya takın',sub:'Kart Okuyucu Aktif'},qr:{ico:'📲',ins:'Telefonunuzun kamerasını<br>QR koda tutun',sub:'QR Ödeme Modu'}}[m];
+  document.getElementById('posamt').textContent='₺'+t;
+  document.getElementById('posico').textContent=c.ico;
+  document.getElementById('posins').innerHTML=c.ins;
+  document.getElementById('posscrsub').textContent=c.sub;
+}
+
+async function startPay() {
+  const btn=document.getElementById('posconfbtn'), txt=document.getElementById('posconftxt');
+  btn.classList.add('proc'); txt.textContent='İşlem Yapılıyor...';
+  document.getElementById('posscrsub').textContent='Sunucu ile İletişim Kuruluyor';
+
+  if (CFG.posMode === 'server') {
+    // Gerçek sunucu modu
+    try {
+      const res = await fetch(`${CFG.serverUrl}/api/payment/process`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          amount: (getTot()*(1+CFG.kdv/100)).toFixed(2),
+          method: payMeth,
+          orderId: curOrd
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('posscrsub').textContent='Onay Alındı ✓';
+        txt.textContent='Onaylandı ✓';
+        setTimeout(confirmPay, 500);
+      } else {
+        btn.classList.remove('proc'); txt.textContent='Ödemeyi Onayla';
+        toast('❌ Ödeme başarısız: '+data.message);
+      }
+    } catch(e) {
+      btn.classList.remove('proc'); txt.textContent='Ödemeyi Onayla';
+      toast('⚠️ Sunucuya bağlanılamadı — simülasyon moduna geçildi');
+      setTimeout(()=>simPay(btn,txt), 500);
+    }
+  } else {
+    simPay(btn,txt);
+  }
+}
+
+function simPay(btn, txt) {
+  document.getElementById('posscrsub').textContent='Banka ile İletişim Kuruluyor';
+  setTimeout(()=>{
+    document.getElementById('posscrsub').textContent='Onay Alındı ✓';
+    txt.textContent='Onaylandı ✓';
+    setTimeout(confirmPay, 600);
+  }, 1800);
+}
+
+async function confirmPay() {
+  recordSale();
+  const items=MENU.filter(it=>(cart[it.id]||0)>0);
+  const barI=items.filter(it=>it.st==='bar'), kitI=items.filter(it=>it.st==='mutfak');
+  const sub=getTot(), kdv=sub*CFG.kdv/100, tot=sub+kdv;
+  const now=new Date(), ts=now.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}), ds=now.toLocaleDateString('tr-TR');
+  const pmLbl=payMeth==='card'?'Kredi Kartı':'QR / Mobil';
+  const on=curOrd, pgn=curPager;
+
+  // Nums display
+  let numH=`<div class="ss-nb o"><div class="ss-nlbl">Sipariş No</div><div class="ss-nval">${on}</div><div class="ss-nsub">Fişinizde yer alır</div></div>`;
+  if(pgn) numH+=`<div class="ss-nb pg"><div class="ss-nlbl">Çağrı Cihazı</div><div class="ss-nval">${p2(pgn)}</div><div class="ss-nsub">Lütfen yan taraftan ${pgn} numaralı çağrı cihazınızı alınız.<br>Siparişiniz hazır olduğunda cihaza bildirim gelecektir.</div></div>`;
+  document.getElementById('ssnums').innerHTML=numH;
+
+  // Station cards
+  document.getElementById('krow').innerHTML=
+    (kitI.length?`<div class="kc m"><div class="kcico">🍳</div><div class="kct">Mutfak → Çağrı: ${pgn?p2(pgn):'—'}</div><div class="kcitems">${kitI.map(it=>it.name+' ×'+cart[it.id]).join('<br>')}</div></div>`:'')
+    +(barI.length?`<div class="kc b"><div class="kcico">☕</div><div class="kct">Bar Fişi</div><div class="kcitems">${barI.map(it=>it.name+' ×'+cart[it.id]).join('<br>')}</div></div>`:'');
+
+  // Build receipt HTML
+  const receiptHTML = buildReceiptHTML(items, sub, kdv, tot, ds, ts, on, pgn, pmLbl);
+  document.getElementById('rcptbox').innerHTML = receiptHTML;
+
+  // Print via server
+  if (CFG.posMode === 'server') {
+    printReceipt({items, sub, kdv, tot, ds, ts, on, pgn, pmLbl, barI, kitI});
+  }
+
+  show('ss');
+}
+
+function buildReceiptHTML(items, sub, kdv, tot, ds, ts, on, pgn, pmLbl) {
+  return `
+    <div class="rhead"><div class="rbrand">${CFG.bizName}</div><div class="rinfo">Specialty Coffee & Kitchen<br>${ds} · ${ts}</div><div class="rordnum">SİPARİŞ ${on}</div></div>
+    ${pgn?`<div class="rpager">ÇAĞRI CİHAZI NUMARANIZ<span class="rpager-num">${p2(pgn)}</span>Lutfen yan taraftan cagri cihazinizi aliniz. Siparisınız hazır olduğunda cihaza bildirim gelecektir.</div>`:''}
+    <div class="rbody">
+      <div style="font-size:10px;color:#888;border-bottom:1px dashed #ccc;padding-bottom:5px;margin-bottom:5px">ÜRÜN LİSTESİ</div>
+      ${items.map(it=>{const opts=Object.entries(iOpts[it.id]||{}).map(([k,v])=>k+': '+v).join(', ');return`<div class="rrow nm">${it.emoji} ${it.name}${cart[it.id]>1?' ×'+cart[it.id]:''}<span>₺${it.price*cart[it.id]}</span></div>`+(opts?`<div class="rrow sb">${opts}</div>`:'')+''}).join('')}
+      <div class="rdiv"></div>
+      <div class="rrow"><span>Ara toplam</span><span>₺${sub.toFixed(2)}</span></div>
+      <div class="rrow"><span>KDV (%${CFG.kdv})</span><span>₺${kdv.toFixed(2)}</span></div>
+      <div class="rdiv"></div>
+      <div class="rtotal"><span>TOPLAM</span><span>₺${tot.toFixed(2)}</span></div>
+      <div class="rdiv"></div>
+      <div class="rrow" style="font-size:10px"><span>Ödeme</span><span>${pmLbl}</span></div>
+    </div>
+    <div class="rfoot">${pgn?'Lütfen yan taraftan çağrı cihazınızı alınız.<br>':''}${CFG.bizMsg}</div>`;
+}
+
+async function printReceipt(data) {
+  try {
+    await fetch(`${CFG.serverUrl}/api/print`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+  } catch(e) { console.warn('Yazıcı hatası:', e); }
+}
+
+function recordSale() {
+  const k=tKey();
+  if(!SALES[k]) SALES[k]={};
+  MENU.forEach(it=>{
+    const q=cart[it.id]||0;
+    if(q>0){
+      if(!SALES[k][it.id]) SALES[k][it.id]={qty:0,revenue:0};
+      SALES[k][it.id].qty+=q; SALES[k][it.id].revenue+=q*it.price;
+    }
+  });
+  saveSales();
+}
+
+// ═══════════════════════════════════════════
+// PIN
+// ═══════════════════════════════════════════
+let pinEntry='';
+function openPin(){pinEntry='';updDots();document.getElementById('perr').textContent='';document.getElementById('pinov').classList.remove('h');}
+function closePin(){document.getElementById('pinov').classList.add('h');}
+function pk(k){if(pinEntry.length>=4)return;pinEntry+=k;updDots();if(pinEntry.length===4)setTimeout(pconf,120);}
+function pdel(){pinEntry=pinEntry.slice(0,-1);updDots();}
+function updDots(){for(let i=0;i<4;i++){const d=document.getElementById('d'+i);d.classList.remove('f','e');if(i<pinEntry.length)d.classList.add('f');}}
+function pconf(){
+  if(pinEntry===CFG.pin){closePin();show('sadm');admTab('menu');}
+  else{for(let i=0;i<4;i++)document.getElementById('d'+i).classList.add('e');document.getElementById('perr').textContent='Hatalı PIN.';setTimeout(()=>{pinEntry='';updDots();document.getElementById('perr').textContent='';},1200);}
+}
+
+// ═══════════════════════════════════════════
+// ADMIN TABS
+// ═══════════════════════════════════════════
+function admTab(tab){
+  ['menu','pager','report','printer','settings','pin'].forEach(t=>document.getElementById('tab-'+t).classList.remove('on'));
+  document.getElementById('tab-'+tab).classList.add('on');
+  if(tab==='menu')renderAdmMenu();
+  else if(tab==='pager')renderAdmPager();
+  else if(tab==='report')renderReport();
+  else if(tab==='printer')renderAdmPrinter();
+  else if(tab==='settings')renderAdmSettings();
+  else renderAdmPin();
+}
+
+// ── MENÜ YÖNETİMİ ──
+function renderAdmMenu(){
+  const cats=[...new Set(MENU.map(i=>i.cat))];
+  const catOpts=cats.map(c=>`<option value="${c}">${c}</option>`).join('')+'<option value="__new__">+ Yeni kategori...</option>';
+  document.getElementById('admbody').innerHTML=`
+    <div class="addform"><div class="addtitle">Yeni Ürün Ekle</div>
+      <div class="fgrid">
+        <div><div class="flbl">Ürün Adı</div><input class="fi" id="fn" placeholder="Matcha Latte"></div>
+        <div><div class="flbl">Açıklama</div><input class="fi" id="fd" placeholder="Kısa açıklama..."></div>
+        <div><div class="flbl">Fiyat (₺)</div><input class="fi" id="fp" type="number" placeholder="0"></div>
+        <div><div class="flbl">Emoji</div><input class="fi" id="fe" placeholder="☕"></div>
+        <div><div class="flbl">Kategori</div><select class="fi" id="fcat">${catOpts}</select></div>
+        <div id="fnc-w" style="display:none"><div class="flbl">Yeni Kategori</div><input class="fi" id="fnc"></div>
+        <div><div class="flbl">İstasyon</div><select class="fi" id="fst"><option value="bar">Bar</option><option value="mutfak">Mutfak</option></select></div>
+        <div><div class="flbl">Seçenekler</div><input class="fi" id="fopt" placeholder="Boyut: Küçük, Orta"></div>
+      </div>
+      <div style="font-size:10px;color:var(--ink3)">Seçenek formatı: <i>Etiket: Seç1, Seç2</i></div>
+      <button class="addbtn" onclick="addItem()">Ürünü Ekle & Kaydet</button>
+      <span id="aok" class="tag-ok" style="display:none">✓ Kaydedildi</span>
+    </div>
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Mevcut Ürünler (${MENU.length})</div>
+    ${MENU.map(it=>`<div class="ami" style="${it.active?'':'opacity:.4'}"><div class="ami-em">${it.emoji}</div><div class="ami-info"><div class="ami-name">${it.name}</div><div class="ami-cat">${it.cat} · ${it.st==='bar'?'Bar':'Mutfak'}</div></div><div class="ami-price">₺${it.price}</div><button class="ami-tog" onclick="togItem(${it.id})">${it.active?'Gizle':'Göster'}</button><button class="ami-del" onclick="delItem(${it.id})">Sil</button></div>`).join('')}`;
+  document.getElementById('fcat').addEventListener('change',function(){document.getElementById('fnc-w').style.display=this.value==='__new__'?'block':'none';});
+}
+
+function addItem(){
+  const name=document.getElementById('fn').value.trim(), price=parseFloat(document.getElementById('fp').value);
+  if(!name||!price){toast('⚠️ Ad ve fiyat zorunlu');return;}
+  const desc=document.getElementById('fd').value.trim(), emoji=document.getElementById('fe').value.trim()||'🍽';
+  let cat=document.getElementById('fcat').value;
+  if(cat==='__new__') cat=document.getElementById('fnc').value.trim()||'Diğer';
+  const st=document.getElementById('fst').value, optRaw=document.getElementById('fopt').value.trim();
+  const opts={};
+  if(optRaw) optRaw.split('\n').forEach(l=>{const[k,...v]=l.split(':');if(k&&v.length)opts[k.trim()]=v.join(':').split(',').map(x=>x.trim()).filter(Boolean);});
+  MENU.push({id:Date.now(),cat,name,desc,price,emoji,st,opts,active:true});
+  saveMenu();
+  const ok=document.getElementById('aok');ok.style.display='inline-block';setTimeout(()=>ok.style.display='none',2000);
+  ['fn','fd','fp','fe','fopt'].forEach(id=>{document.getElementById(id).value='';});
+  renderAdmMenu();
+}
+function togItem(id){const i=MENU.find(x=>x.id===id);if(i){i.active=!i.active;saveMenu();}renderAdmMenu();}
+function delItem(id){if(confirm('Bu ürünü silmek istediğinizden emin misiniz?')){MENU=MENU.filter(x=>x.id!==id);saveMenu();renderAdmMenu();}}
+
+// ── ÇAĞRI CİHAZI ──
+function renderAdmPager(){
+  const cells=Array.from({length:CFG.pagerMax},(_,i)=>{
+    const n=i+1, isAct=n===COUNTERS.pager&&COUNTERS.usedPagers.includes(n), isUsed=COUNTERS.usedPagers.includes(n)&&n!==COUNTERS.pager, cls=isAct?'active':isUsed?'used':'avail';
+    return `<div class="pcell ${cls}" onclick="setPager(${n})">${p2(n)}</div>`;
+  }).join('');
+  document.getElementById('admbody').innerHTML=`
+    <div class="wsec"><div class="wsec-title">Çağrı Cihazı Yönetimi</div>
+      <div class="pager-display"><div class="pager-dlbl">Son Verilen Numara</div><div class="pager-dval">${COUNTERS.pager>0?p2(COUNTERS.pager):'—'}</div><div class="pager-dsub">Toplam: ${COUNTERS.usedPagers.length} · Max: ${CFG.pagerMax}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="flbl" style="margin:0">Max numara:</div>
+        <input class="fi" type="number" min="1" max="99" value="${CFG.pagerMax}" id="pmaxinp" style="width:70px">
+        <button class="savebtn" style="margin-top:0" onclick="setPMax()">Güncelle</button>
+      </div>
+      <div class="pager-grid">${cells}</div>
+      <div style="display:flex;gap:6px;margin:8px 0;font-size:10px;color:var(--ink3)">
+        <span style="color:var(--bar)">■ Mevcut</span>&nbsp;<span style="color:var(--ink)">■ Kullanıldı</span>&nbsp;<span>□ Boş</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="pager-reset" onclick="resetPager()">Çağrı Numaralarını Sıfırla</button>
+        <button class="savebtn" style="margin-top:0" onclick="resetOrder()">Sipariş Sayacını Sıfırla</button>
+      </div>
+    </div>
+    <div class="wsec"><div class="wsec-title">Bilgi</div>
+      <div style="font-size:12px;color:var(--ink3);line-height:1.8">
+        Sipariş numarası (${COUNTERS.order}) ve çağrı cihazı numarası (${COUNTERS.pager}) bilgisayar kapanınca kaybolmaz.<br>
+        Günün başında <b>"Sipariş Sayacını Sıfırla"</b> butonunu kullanın.
+      </div>
+    </div>`;
+}
+function setPager(n){COUNTERS.pager=n;if(!COUNTERS.usedPagers.includes(n))COUNTERS.usedPagers.push(n);saveCounters();renderAdmPager();}
+function setPMax(){const v=parseInt(document.getElementById('pmaxinp').value);if(v>=1&&v<=99){CFG.pagerMax=v;saveCfg();renderAdmPager();}}
+function resetPager(){if(confirm('Tüm çağrı numaraları sıfırlansın mı?')){COUNTERS.pager=0;COUNTERS.usedPagers=[];saveCounters();renderAdmPager();}}
+function resetOrder(){if(confirm('Sipariş sayacı sıfırlansın mı?')){COUNTERS.order=0;saveCounters();renderAdmPager();}}
+
+// ── RAPOR ──
+function renderReport(){
+  const data=SALES[rptDate]||{};
+  const hasData=Object.keys(data).length>0;
+  let tq=0,tr=0;if(hasData)Object.values(data).forEach(d=>{tq+=d.qty;tr+=d.revenue;});
+  const rows=MENU.filter(it=>data[it.id]).map(it=>({...it,...data[it.id]})).sort((a,b)=>b.revenue-a.revenue);
+  const mx=rows.length?rows[0].revenue:1;
+  const dates=Object.keys(SALES).sort(), ci=dates.indexOf(rptDate);
+  document.getElementById('admbody').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div><div style="font-family:'Cormorant Garamond',serif;font-size:20px">${fmtDate(rptDate)}</div><div style="font-size:10px;color:var(--ink3);margin-top:3px">${hasData?'Satış verisi mevcut':'Bu tarihte kayıt yok'}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button style="background:none;border:1px solid var(--div);color:var(--ink3);padding:7px 14px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer" onclick="rptNav(-1)" ${ci<=0?'disabled':''}>← Önceki</button>
+        <button style="background:none;border:1px solid var(--div);color:var(--ink3);padding:7px 14px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer" onclick="rptNav(1)" ${ci>=dates.length-1?'disabled':''}>Sonraki →</button>
+        <button style="background:none;border:1px solid var(--gold);color:var(--gold);padding:7px 14px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer" onclick="rptDate=tKey();renderReport()">Bugün</button>
+      </div>
+    </div>
+    <div class="rpt-summary">
+      <div class="rpt-stat"><div class="rpt-slbl">Toplam Satış</div><div class="rpt-sval">${tq} adet</div></div>
+      <div class="rpt-stat"><div class="rpt-slbl">Ciro (KDV hariç)</div><div class="rpt-sval g">₺${tr.toFixed(2)}</div></div>
+      <div class="rpt-stat"><div class="rpt-slbl">Farklı Ürün</div><div class="rpt-sval">${rows.length}</div></div>
+    </div>
+    ${hasData?`<div class="rpt-table">
+      <div class="rpt-thead"><div class="rpt-th">Ürün</div><div class="rpt-th">Kategori</div><div class="rpt-th">Adet</div><div class="rpt-th">Ciro</div></div>
+      ${rows.map(it=>`<div class="rpt-row"><div class="rpt-name">${it.emoji} ${it.name}</div><div><div class="rpt-cat">${it.cat}</div></div><div class="rpt-td">${it.qty}</div><div><div class="rpt-td g">₺${it.revenue.toFixed(2)}</div><div class="rpt-bw"><div class="rpt-b" style="width:${Math.round(it.revenue/mx*100)}%"></div></div></div></div>`).join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+      <button class="rpt-export" onclick="exportCSV()">CSV İndir</button>
+      <button class="rpt-clear" onclick="clearDay()">Bu Günü Sil</button>
+    </div>` : `<div class="rpt-table"><div class="rpt-empty">Bu tarihte sipariş kaydı bulunamadı.</div></div>`}`;
+}
+function rptNav(d){const dates=Object.keys(SALES).sort(),i=dates.indexOf(rptDate)+d;if(i>=0&&i<dates.length)rptDate=dates[i];renderReport();}
+function exportCSV(){
+  const data=SALES[rptDate]||{};
+  const rows=MENU.filter(it=>data[it.id]).map(it=>`${it.name},${it.cat},${data[it.id].qty},${data[it.id].revenue}`);
+  const csv='Ürün,Kategori,Adet,Ciro (₺)\n'+rows.join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=`aroma-rapor-${rptDate}.csv`;a.click();
+}
+function clearDay(){if(confirm('Bu günün kayıtları silinsin mi?')){delete SALES[rptDate];saveSales();rptDate=tKey();renderReport();}}
+
+// ── YAZICI & FİŞ ──
+function renderAdmPrinter(){
+  document.getElementById('admbody').innerHTML=`
+    <div class="wsec"><div class="wsec-title">Yazıcı Atamaları</div>
+      <div class="witem"><div><div class="witem-label">Bar Yazıcısı</div><div class="witem-sub">İçecek fişleri (ESC/POS)</div></div>
+        <input class="wsel fi" id="prBar" value="${CFG.printerBar}" style="width:180px"></div>
+      <div class="witem"><div><div class="witem-label">Mutfak Yazıcısı</div><div class="witem-sub">Yiyecek + Çağrı No</div></div>
+        <input class="wsel fi" id="prMut" value="${CFG.printerMutfak}" style="width:180px"></div>
+      <div class="witem"><div><div class="witem-label">Misafir Fişi</div><div class="witem-sub">Sipariş No + Çağrı No dahil</div></div>
+        <input class="wsel fi" id="prGuest" value="${CFG.printerGuest}" style="width:180px"></div>
+    </div>
+    <div class="wsec"><div class="wsec-title">Yazıcı Bağlantısı</div>
+      <div class="witem"><div><div class="witem-label">Protokol</div></div>
+        <select class="wsel" id="prProto">
+          <option value="escpos" ${CFG.printerProtocol==='escpos'?'selected':''}>ESC/POS (Termal)</option>
+          <option value="star" ${CFG.printerProtocol==='star'?'selected':''}>Star TSP</option>
+          <option value="pdf" ${CFG.printerProtocol==='pdf'?'selected':''}>PDF (Dijital)</option>
+        </select></div>
+      <div class="witem"><div><div class="witem-label">Bağlantı</div></div>
+        <select class="wsel" id="prConn">
+          <option value="usb" ${CFG.printerConn==='usb'?'selected':''}>USB</option>
+          <option value="network" ${CFG.printerConn==='network'?'selected':''}>Ağ (TCP/IP)</option>
+          <option value="bluetooth" ${CFG.printerConn==='bluetooth'?'selected':''}>Bluetooth</option>
+        </select></div>
+      <div class="witem"><div><div class="witem-label">IP Adresi (Ağ mod)</div><div class="witem-sub">Örn: 192.168.1.100</div></div>
+        <input class="wsel fi" id="prIp" value="${CFG.printerIp}" style="width:160px"></div>
+      <div class="witem"><div><div class="witem-label">Port (Ağ mod)</div></div>
+        <input class="wsel fi" id="prPort" value="${CFG.printerPort}" style="width:80px"></div>
+    </div>
+    <div class="wsec"><div class="wsec-title">Fiş İçeriği</div>
+      <div class="witem"><div><div class="witem-label">İşletme Adı</div></div>
+        <input class="wsel fi" id="bizName" value="${CFG.bizName}" style="width:140px"></div>
+      <div class="witem"><div><div class="witem-label">Alt Mesaj</div></div>
+        <input class="wsel fi" id="bizMsg" value="${CFG.bizMsg}" style="width:220px"></div>
+      <div class="witem"><div><div class="witem-label">KDV Oranı (%)</div></div>
+        <input class="wsel fi" id="kdvRate" type="number" value="${CFG.kdv}" style="width:70px"></div>
+    </div>
+    <button class="savebtn" onclick="savePrinterCfg()">Ayarları Kaydet</button>
+    <span id="psok" class="tag-ok" style="display:none">✓ Kaydedildi</span>`;
+}
+function savePrinterCfg(){
+  CFG.printerBar=document.getElementById('prBar').value;
+  CFG.printerMutfak=document.getElementById('prMut').value;
+  CFG.printerGuest=document.getElementById('prGuest').value;
+  CFG.printerProtocol=document.getElementById('prProto').value;
+  CFG.printerConn=document.getElementById('prConn').value;
+  CFG.printerIp=document.getElementById('prIp').value;
+  CFG.printerPort=document.getElementById('prPort').value;
+  CFG.bizName=document.getElementById('bizName').value;
+  CFG.bizMsg=document.getElementById('bizMsg').value;
+  CFG.kdv=parseInt(document.getElementById('kdvRate').value)||10;
+  saveCfg();
+  const ok=document.getElementById('psok');ok.style.display='inline-block';setTimeout(()=>ok.style.display='none',2000);
+}
+
+// ── SİSTEM AYARLARI ──
+function renderAdmSettings(){
+  document.getElementById('admbody').innerHTML=`
+    <div class="wsec"><div class="wsec-title">POS & Sunucu Bağlantısı</div>
+      <div class="witem"><div><div class="witem-label">POS Modu</div><div class="witem-sub">Gerçek sunucu veya simülasyon</div></div>
+        <select class="wsel" id="posMode">
+          <option value="sim" ${CFG.posMode==='sim'?'selected':''}>Simülasyon (Demo)</option>
+          <option value="server" ${CFG.posMode==='server'?'selected':''}>Sunucu Modu (server.js)</option>
+        </select></div>
+      <div class="witem"><div><div class="witem-label">Sunucu URL</div><div class="witem-sub">server.js adresi (örn: http://localhost:3001)</div></div>
+        <input class="wsel fi" id="srvUrl" value="${CFG.serverUrl}" style="width:220px"></div>
+      <div class="witem"><div><div class="witem-label">POS API Key</div><div class="witem-sub">Nkolay / iyzico API anahtarı</div></div>
+        <input class="wsel fi" id="posKey" value="${CFG.posApiKey}" style="width:220px" type="password"></div>
+      <div class="witem"><div><div class="witem-label">Sunucu Bağlantı Testi</div></div>
+        <button class="addbtn" style="margin-top:0" onclick="testServer()">Test Et</button></div>
+      <div id="connResult" style="margin-top:8px;font-size:12px;min-height:16px"></div>
+    </div>
+    <div class="wsec"><div class="wsec-title">Veri Yönetimi</div>
+      <div class="witem"><div><div class="witem-label">Tüm Satış Verisi</div><div class="witem-sub">localStorage'da kayıtlı</div></div>
+        <button class="addbtn" style="margin-top:0;background:var(--err)" onclick="clearAllData()">Tümünü Sil</button></div>
+      <div class="witem"><div><div class="witem-label">Menüyü Sıfırla</div><div class="witem-sub">Varsayılan menüye dön</div></div>
+        <button class="addbtn" style="margin-top:0;background:var(--ink2)" onclick="resetMenu()">Sıfırla</button></div>
+    </div>
+    <div class="wsec"><div class="wsec-title">Kurulum Notları</div>
+      <div style="font-size:12px;color:var(--ink3);line-height:1.9">
+        <b style="color:var(--ink)">1. Bu dosyayı bilgisayara yükle:</b><br>
+        &nbsp;→ index.html ve server.js aynı klasöre koy<br>
+        &nbsp;→ Node.js yükle: <code>nodejs.org</code><br>
+        &nbsp;→ <code>npm install</code> çalıştır<br>
+        &nbsp;→ <code>node server.js</code> başlat<br><br>
+        <b style="color:var(--ink)">2. Tarayıcıda aç:</b><br>
+        &nbsp;→ Chrome/Edge → F11 tam ekran<br>
+        &nbsp;→ URL: <code>http://localhost:3001</code><br><br>
+        <b style="color:var(--ink)">3. Yazıcı bağlantısı:</b><br>
+        &nbsp;→ USB termal yazıcı → USB'ye tak, server.js otomatik algılar<br>
+        &nbsp;→ Ağ yazıcısı → IP ve port gir, yukarıda kaydet<br><br>
+        <b style="color:var(--ink)">4. Dokunmatik ekran:</b><br>
+        &nbsp;→ Windows dokunmatik sürücüsü zaten çalışır<br>
+        &nbsp;→ Ekranı tam ekran yap, Chrome kiosk mode: <code>--kiosk</code>
+      </div>
+    </div>
+    <button class="savebtn" onclick="saveSettings()">Kaydet</button>
+    <span id="setsok" class="tag-ok" style="display:none">✓ Kaydedildi</span>`;
+}
+async function testServer(){
+  const url=document.getElementById('srvUrl').value;
+  const res=document.getElementById('connResult');
+  res.textContent='Test ediliyor...';res.style.color=CFG.goldl||'#C4975A';
+  try{
+    const r=await fetch(url+'/api/health',{signal:AbortSignal.timeout(3000)});
+    const d=await r.json();
+    res.style.color='#2A6644';res.innerHTML=`<span class="conn-dot ok"></span>Bağlandı — Yazıcı: ${d.printer||'?'} · POS: ${d.pos||'?'}`;
+  }catch(e){
+    res.style.color='#8B2020';res.innerHTML=`<span class="conn-dot err"></span>Bağlantı başarısız — server.js çalışıyor mu?`;
+  }
+}
+function saveSettings(){
+  CFG.posMode=document.getElementById('posMode').value;
+  CFG.serverUrl=document.getElementById('srvUrl').value;
+  CFG.posApiKey=document.getElementById('posKey').value;
+  saveCfg();
+  const ok=document.getElementById('setsok');ok.style.display='inline-block';setTimeout(()=>ok.style.display='none',2000);
+}
+function clearAllData(){if(confirm('TÜM satış verisi ve ayarlar silinsin mi? Bu işlem geri alınamaz!')){localStorage.clear();location.reload();}}
+function resetMenu(){if(confirm('Menü varsayılan ürünlere dönsün mü?')){localStorage.removeItem('aroma_menu');location.reload();}}
+
+// ── GÜVENLİK / PIN ──
+function renderAdmPin(){
+  document.getElementById('admbody').innerHTML=`
+    <div class="wsec"><div class="wsec-title">PIN Değiştir</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.7">
+        Giriş: <strong style="color:var(--gold)">Sol alt köşeye gizli dokunuş</strong><br>Mevcut PIN: <strong style="color:var(--gold)">${CFG.pin}</strong>
+      </div>
+      <div class="pin-row">
+        <div class="pin-field"><div class="flbl">Mevcut PIN</div><input class="fi" id="op" type="password" maxlength="4" placeholder="••••"></div>
+        <div class="pin-field"><div class="flbl">Yeni PIN</div><input class="fi" id="np" type="password" maxlength="4" placeholder="••••"></div>
+        <div class="pin-field"><div class="flbl">Tekrar</div><input class="fi" id="np2" type="password" maxlength="4" placeholder="••••"></div>
+        <button class="addbtn" style="margin-top:0;padding:8px 14px" onclick="changePin()">Kaydet</button>
+      </div>
+      <div id="pmsg" style="margin-top:8px;font-size:12px;min-height:16px"></div>
+    </div>`;
+}
+function changePin(){
+  const old=document.getElementById('op').value,n1=document.getElementById('np').value,n2=document.getElementById('np2').value;
+  const msg=document.getElementById('pmsg');
+  if(old!==CFG.pin){msg.style.color='var(--err)';msg.textContent='Mevcut PIN hatalı.';return;}
+  if(n1.length!==4||!/^\d+$/.test(n1)){msg.style.color='var(--err)';msg.textContent='Yeni PIN 4 haneli sayı olmalı.';return;}
+  if(n1!==n2){msg.style.color='var(--err)';msg.textContent="PIN'ler eşleşmiyor.";return;}
+  CFG.pin=n1;saveCfg();msg.style.color='var(--ok)';msg.textContent='✓ PIN değiştirildi.';
+  ['op','np','np2'].forEach(id=>{document.getElementById(id).value='';});
+  setTimeout(()=>renderAdmPin(),1500);
+}
+
+// ── INIT ──
+(function(){
+  const w=document.getElementById('wlns');
+  for(let i=0;i<14;i++){const l=document.createElement('div');l.className='wline';l.style.left=(i*8+3)+'%';w.appendChild(l);}
+})();
+</script>
+</body>
+</html>
