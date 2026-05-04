@@ -73,7 +73,12 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink)}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
 .mcard{background:var(--surf);border:1px solid var(--div);display:flex;flex-direction:column;transition:border-color .15s;overflow:hidden}
 .mcard:hover{border-color:rgba(160,120,64,.4)}
-.mcard-img{width:100%;height:110px;background:var(--parch);display:flex;align-items:center;justify-content:center;font-size:52px;border-bottom:1px solid var(--div);flex-shrink:0}
+.mcard-img{width:100%;height:110px;background:var(--parch);display:flex;align-items:center;justify-content:center;font-size:52px;border-bottom:1px solid var(--div);flex-shrink:0;overflow:hidden;position:relative}
+.mcard-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.img-upload-btn{background:var(--ink);color:#fff;border:none;padding:6px 14px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-top:8px}
+.img-upload-btn:hover{background:var(--gold)}
+.img-preview{width:80px;height:80px;object-fit:cover;border:1px solid var(--div);margin-top:6px}
+.img-upload-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .mcard-body{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .mcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
 .mcard-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--ink);line-height:1.2}
@@ -554,11 +559,7 @@ function nextPager() {
 // ═══════════════════════════════════════════
 function show(id) { document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); }
 
-async function goMenu() {
-  try {
-    const r = await fetch('/api/menu');
-    if (r.ok) { MENU = await r.json(); }
-  } catch(e) { console.warn('Sunucu hatasi:', e); }
+function goMenu() {
   show('sm'); initOpts(); renderCats(); renderGrid(); renderRight();
 }
 
@@ -605,7 +606,7 @@ function renderGrid() {
     const q=cart[it.id]||0, opts=iOpts[it.id]||{};
     const optHTML = Object.entries(it.opts).map(([k,cs])=>cs.map(c=>`<span class="mopt ${opts[k]===c?'on':''}" onclick="setOpt(${it.id},'${k}','${c}')">${c}</span>`).join('')).join('');
     return `<div class="mcard">
-      <div class="mcard-img">${it.emoji}</div>
+      <div class="mcard-img">${it.image ? `<img src="${it.image}" alt="${it.name}">` : ''}${!it.image ? it.emoji : ''}</div>
       <div class="mcard-body">
         <div class="mcard-top"><div class="mcard-name">${it.name}</div><div class="mcard-price">₺${it.price}</div></div>
         <div class="mcard-desc">${it.desc}</div>
@@ -818,7 +819,16 @@ function renderAdmMenu(){
         <div><div class="flbl">Ürün Adı</div><input class="fi" id="fn" placeholder="Matcha Latte"></div>
         <div><div class="flbl">Açıklama</div><input class="fi" id="fd" placeholder="Kısa açıklama..."></div>
         <div><div class="flbl">Fiyat (₺)</div><input class="fi" id="fp" type="number" placeholder="0"></div>
-        <div><div class="flbl">Emoji</div><input class="fi" id="fe" placeholder="☕"></div>
+        <div>
+          <div class="flbl">Fotoğraf</div>
+          <div class="img-upload-wrap">
+            <input type="file" id="fimg" accept="image/*" style="display:none" onchange="previewImg(this)">
+            <button class="img-upload-btn" onclick="document.getElementById('fimg').click()">📷 Fotoğraf Seç</button>
+            <img id="fimg-preview" class="img-preview" style="display:none">
+            <div style="font-size:10px;color:var(--ink3);margin-top:2px">veya Emoji:</div>
+            <input class="fi" id="fe" placeholder="☕" style="width:70px">
+          </div>
+        </div>
         <div><div class="flbl">Kategori</div><select class="fi" id="fcat">${catOpts}</select></div>
         <div id="fnc-w" style="display:none"><div class="flbl">Yeni Kategori</div><input class="fi" id="fnc"></div>
         <div><div class="flbl">İstasyon</div><select class="fi" id="fst"><option value="bar">Bar</option><option value="mutfak">Mutfak</option></select></div>
@@ -829,7 +839,7 @@ function renderAdmMenu(){
       <span id="aok" class="tag-ok" style="display:none">✓ Kaydedildi</span>
     </div>
     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Mevcut Ürünler (${MENU.length})</div>
-    ${MENU.map(it=>`<div class="ami" style="${it.active?'':'opacity:.4'}"><div class="ami-em">${it.emoji}</div><div class="ami-info"><div class="ami-name">${it.name}</div><div class="ami-cat">${it.cat} · ${it.st==='bar'?'Bar':'Mutfak'}</div></div><div class="ami-price">₺${it.price}</div><button class="ami-tog" onclick="togItem(${it.id})">${it.active?'Gizle':'Göster'}</button><button class="ami-del" onclick="delItem(${it.id})">Sil</button></div>`).join('')}`;
+    ${MENU.map(it=>`<div class="ami" style="${it.active?'':'opacity:.4'}"><div class="ami-em" style="position:relative;overflow:hidden">${it.image?`<img src="${it.image}" style="width:34px;height:34px;object-fit:cover;border-radius:2px">`:it.emoji}</div><div class="ami-info"><div class="ami-name">${it.name}</div><div class="ami-cat">${it.cat} · ${it.st==='bar'?'Bar':'Mutfak'}</div></div><div class="ami-price">₺${it.price}</div><button class="ami-tog" onclick="togItem(${it.id})">${it.active?'Gizle':'Göster'}</button><button class="ami-del" onclick="delItem(${it.id})">Sil</button></div>`).join('')}`;
   document.getElementById('fcat').addEventListener('change',function(){document.getElementById('fnc-w').style.display=this.value==='__new__'?'block':'none';});
 }
 
