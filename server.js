@@ -315,3 +315,20 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`║  MENÜ   : ${getMenu().length} ürün (data/menu.json)     ║`);
   console.log('╚══════════════════════════════════════════╝\n');
 });
+
+// ── İSTASYONLAR ─────────────────────────────────────────────
+const STATIONS_FILE = path.join(DATA_DIR, 'stations.json');
+const DEFAULT_STATIONS = [
+  {id:'bar',    name:'Bar',    printerIp:'10.10.30.123'},
+  {id:'mutfak', name:'Mutfak', printerIp:'10.10.30.122'},
+];
+function getStations(){ return readJSON(STATIONS_FILE, DEFAULT_STATIONS); }
+function saveStationsFile(d){ writeJSON(STATIONS_FILE, d); }
+
+app.get('/api/stations',  (req,res)=>res.json(getStations()));
+app.post('/api/stations', (req,res)=>{
+  const st=req.body;
+  if(!Array.isArray(st)) return res.status(400).json({error:'Geçersiz'});
+  saveStationsFile(st);
+  res.json({ok:true});
+});

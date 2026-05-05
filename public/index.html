@@ -417,10 +417,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink)}
       <div><div class="flbl">Emoji</div><input class="fi" id="edit-emoji" placeholder="☕" style="width:70px"></div>
       <div><div class="flbl">Kategori</div><input class="fi" id="edit-cat" placeholder="Kategori"></div>
       <div><div class="flbl">İstasyon</div>
-        <select class="fi" id="edit-st">
-          <option value="bar">Bar</option>
-          <option value="mutfak">Mutfak</option>
-        </select>
+        <select class="fi" id="edit-st"></select>
       </div>
     </div>
     <div class="flbl" style="margin-top:8px">Fotoğraf Değiştir</div>
@@ -490,6 +487,7 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink)}
     <button class="atab on" id="tab-menu" onclick="admTab('menu')">Menü</button>
     <button class="atab" id="tab-pager" onclick="admTab('pager')">Çağrı Cihazı</button>
     <button class="atab" id="tab-report" onclick="admTab('report')">Rapor</button>
+    <button class="atab" id="tab-stations" onclick="admTab('stations')">İstasyonlar</button>
     <button class="atab" id="tab-printer" onclick="admTab('printer')">Yazıcı & Fiş</button>
     <button class="atab" id="tab-settings" onclick="admTab('settings')">Sistem</button>
     <button class="atab" id="tab-pin" onclick="admTab('pin')">Güvenlik</button>
@@ -531,6 +529,15 @@ async function postToServer(endpoint, data) {
   return null;
 }
 
+// Sunucudan istasyonları yükle
+async function loadStationsFromServer(){
+  const serverSt = await fetchFromServer('/api/stations');
+  if(serverSt && Array.isArray(serverSt) && serverSt.length>0){
+    STATIONS = serverSt;
+    LS.set('aroma_stations', STATIONS);
+  }
+}
+
 let MENU = LS.get('aroma_menu', [
   {id:1,cat:"Kahve",name:"Espresso",desc:"Yoğun, saf İtalyan usulü",price:45,emoji:"☕",st:"bar",opts:{Boyut:["Tek","Çift"],Sıcaklık:["Sıcak","Serin"]},active:true},
   {id:2,cat:"Kahve",name:"Latte",desc:"Kadifemsi sütlü espresso",price:65,emoji:"🥛",st:"bar",opts:{Boyut:["Küçük","Orta","Büyük"],Süt:["Tam yağlı","Yulaf","Badem"],Sıcaklık:["Sıcak","Soğuk"]},active:true},
@@ -568,6 +575,11 @@ let CFG = LS.get('aroma_cfg', {
 
 let SALES = LS.get('aroma_sales', {});
 let COUNTERS = LS.get('aroma_counters', { order: 0, pager: 0, usedPagers: [] });
+let STATIONS = LS.get('aroma_stations', [
+  {id:'bar',    name:'Bar',    printerIp:'10.10.30.123'},
+  {id:'mutfak', name:'Mutfak', printerIp:'10.10.30.122'},
+]);
+function saveStations(){ LS.set('aroma_stations', STATIONS); postToServer('/api/stations', STATIONS); }
 
 async function saveMenu() {
   LS.set('aroma_menu', MENU); // yerel yedek
@@ -918,17 +930,26 @@ function pconf(){
 // ADMIN TABS
 // ═══════════════════════════════════════════
 function admTab(tab){
-  ['menu','pager','report','printer','settings','pin'].forEach(t=>document.getElementById('tab-'+t).classList.remove('on'));
-  document.getElementById('tab-'+tab).classList.add('on');
+  ['menu','pager','report','stations','printer','settings','pin'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el) el.classList.remove('on');
+  });
+  const active=document.getElementById('tab-'+tab);
+  if(active) active.classList.add('on');
   if(tab==='menu')renderAdmMenu();
   else if(tab==='pager')renderAdmPager();
   else if(tab==='report')renderReport();
+  else if(tab==='stations')renderAdmStations();
   else if(tab==='printer')renderAdmPrinter();
   else if(tab==='settings')renderAdmSettings();
   else renderAdmPin();
 }
 
 // ── MENÜ YÖNETİMİ ──
+function getStationOpts(selectedId){
+  return STATIONS.map(s=>`<option value="${s.id}" ${s.id===selectedId?'selected':''}>${s.name}</option>`).join('');
+}
+
 function renderAdmMenu(){
   const cats=[...new Set(MENU.map(i=>i.cat))];
   const catOpts=cats.map(c=>`<option value="${c}">${c}</option>`).join('')+'<option value="__new__">+ Yeni kategori...</option>';
@@ -950,7 +971,7 @@ function renderAdmMenu(){
         </div>
         <div><div class="flbl">Kategori</div><select class="fi" id="fcat">${catOpts}</select></div>
         <div id="fnc-w" style="display:none"><div class="flbl">Yeni Kategori</div><input class="fi" id="fnc"></div>
-        <div><div class="flbl">İstasyon</div><select class="fi" id="fst"><option value="bar">Bar</option><option value="mutfak">Mutfak</option></select></div>
+        <div><div class="flbl">İstasyon</div><select class="fi" id="fst" id="fst"></select></div>
         <div><div class="flbl">Seçenekler</div><input class="fi" id="fopt" placeholder="Boyut: Küçük, Orta"></div>
       </div>
       <div style="font-size:10px;color:var(--ink3)">Seçenek formatı: <i>Etiket: Seç1, Seç2</i></div>
@@ -969,6 +990,9 @@ function renderAdmMenu(){
       <button class="ami-del" onclick="delItem(${it.id})">Sil</button>
     </div>`).join('')}`;
   document.getElementById('fcat').addEventListener('change',function(){document.getElementById('fnc-w').style.display=this.value==='__new__'?'block':'none';});
+  // İstasyon selectini doldur
+  const fst = document.getElementById('fst');
+  if(fst) fst.innerHTML = getStationOpts(STATIONS[0]?.id||'bar');
 }
 
 function addItem(){
@@ -997,7 +1021,8 @@ function openEditModal(id){
   document.getElementById('edit-price').value=it.price||'';
   document.getElementById('edit-emoji').value=it.emoji||'';
   document.getElementById('edit-cat').value=it.cat||'';
-  document.getElementById('edit-st').value=it.st||'bar';
+  const editSt = document.getElementById('edit-st');
+  editSt.innerHTML = getStationOpts(it.st||'bar');
   const prev=document.getElementById('edit-fimg-preview');
   if(it.image){prev.src=it.image;prev.style.display='block';prev.dataset.b64=it.image;}
   else{prev.style.display='none';prev.dataset.b64='';}
@@ -1118,6 +1143,66 @@ function exportCSV(){
 function clearDay(){if(confirm('Bu günün kayıtları silinsin mi?')){delete SALES[rptDate];saveSales();rptDate=tKey();renderReport();}}
 
 // ── YAZICI & FİŞ ──
+function renderAdmStations(){
+  document.getElementById('admbody').innerHTML=`
+    <div class="addform">
+      <div class="addtitle">Yeni İstasyon Ekle</div>
+      <div class="fgrid">
+        <div><div class="flbl">İstasyon Adı</div><input class="fi" id="st-name" placeholder="Örn: Pasta, Izgara, Soğuk Mutfak"></div>
+        <div><div class="flbl">Yazıcı IP</div><input class="fi" id="st-ip" placeholder="10.10.30.xxx"></div>
+      </div>
+      <button class="addbtn" onclick="addStation()">İstasyon Ekle</button>
+      <span id="st-ok" class="tag-ok" style="display:none">✓ Eklendi</span>
+    </div>
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Mevcut İstasyonlar (${STATIONS.length})</div>
+    <div class="wsec">
+      ${STATIONS.map((s,i)=>`
+        <div class="witem">
+          <div>
+            <div class="witem-label">${s.name}</div>
+            <div class="witem-sub">Yazıcı: ${s.printerIp||'Tanımsız'} · ID: ${s.id}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="wsel fi" value="${s.printerIp||''}" placeholder="10.10.30.xxx" style="width:130px" onchange="updateStationIp(${i},this.value)">
+            ${i>1?`<button class="ami-del" onclick="deleteStation(${i})">Sil</button>`:'<span style="font-size:10px;color:var(--ink3)">Sabit</span>'}
+          </div>
+        </div>`).join('')}
+    </div>
+    <button class="savebtn" onclick="saveStationsBtn()">Kaydet</button>
+    <span id="st-save-ok" class="tag-ok" style="display:none">✓ Kaydedildi</span>
+  `;
+}
+
+function addStation(){
+  const name=document.getElementById('st-name').value.trim();
+  const ip=document.getElementById('st-ip').value.trim();
+  if(!name){alert('İstasyon adı gerekli');return;}
+  const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  STATIONS.push({id,name,printerIp:ip});
+  saveStations();
+  document.getElementById('st-name').value='';
+  document.getElementById('st-ip').value='';
+  const ok=document.getElementById('st-ok');ok.style.display='inline-block';setTimeout(()=>ok.style.display='none',2000);
+  renderAdmStations();
+}
+
+function updateStationIp(idx,ip){
+  STATIONS[idx].printerIp=ip;
+}
+
+function deleteStation(idx){
+  if(!confirm('Bu istasyonu silmek istediğinizden emin misiniz?')) return;
+  STATIONS.splice(idx,1);
+  saveStations();
+  renderAdmStations();
+}
+
+function saveStationsBtn(){
+  saveStations();
+  const ok=document.getElementById('st-save-ok');ok.style.display='inline-block';setTimeout(()=>ok.style.display='none',2000);
+  renderAdmMenu(); // Menüdeki istasyon seçeneklerini güncelle
+}
+
 function renderAdmPrinter(){
   document.getElementById('admbody').innerHTML=`
     <div class="wsec"><div class="wsec-title">Yazıcı Atamaları</div>
