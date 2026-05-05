@@ -230,6 +230,27 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink)}
 .ami-tog:hover{border-color:var(--gold);color:var(--gold)}
 .ami-del{background:none;border:1px solid rgba(139,32,32,.3);color:var(--err);padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Jost',sans-serif}
 .ami-del:hover{background:var(--err);color:#fff}
+.ami-edit{background:none;border:1px solid rgba(160,120,64,.3);color:var(--gold);padding:4px 10px;font-size:10px;cursor:pointer;font-family:'Jost',sans-serif;margin-right:4px}
+.ami-edit:hover{background:var(--gold);color:#fff}
+.edit-modal-ov{position:fixed;inset:0;background:rgba(15,13,10,.85);display:flex;align-items:center;justify-content:center;z-index:800}
+.edit-modal-ov.h{display:none}
+.edit-modal-box{background:var(--surf);border:1px solid var(--div);padding:24px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto}
+.edit-modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin-bottom:16px;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.edit-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3)}
+.note-modal-ov{position:fixed;inset:0;background:rgba(15,13,10,.75);display:flex;align-items:flex-end;justify-content:center;z-index:700}
+.note-modal-ov.h{display:none}
+.note-modal-box{background:var(--surf);width:100%;max-width:600px;padding:24px;border-radius:16px 16px 0 0}
+.note-modal-img{width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+.note-modal-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.note-modal-price{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);margin-bottom:8px}
+.note-modal-desc{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:14px}
+.note-modal-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.note-modal-input{width:100%;border:1px solid var(--div);padding:10px 14px;font-family:'Jost',sans-serif;font-size:13px;resize:none;color:var(--ink);background:var(--cream);margin-bottom:14px}
+.note-modal-input:focus{outline:none;border-color:var(--gold)}
+.note-modal-btns{display:flex;gap:10px}
+.note-modal-add{flex:1;background:var(--gold);color:#fff;border:none;padding:14px;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.note-modal-add:hover{background:var(--goldl)}
+.note-modal-close{background:var(--parch);color:var(--ink3);border:1px solid var(--div);padding:14px 20px;font-family:'Jost',sans-serif;font-size:12px;cursor:pointer}
 .addform{background:var(--surf);border:1px solid var(--div);padding:18px;margin-bottom:18px}
 .addtitle{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;margin-bottom:12px}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
@@ -357,6 +378,62 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink)}
         <button class="kpaybtn" onclick="goPayment()">Ödemeye Geç <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ÖN İZLEME & NOT MODALI -->
+<div class="note-modal-ov h" id="noteModal">
+  <div class="note-modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div>
+        <div class="note-modal-name" id="nm-name"></div>
+        <div class="note-modal-price" id="nm-price"></div>
+      </div>
+      <button class="edit-close" onclick="closeNoteModal()">✕</button>
+    </div>
+    <img id="nm-img" class="note-modal-img" style="display:none">
+    <div class="note-modal-desc" id="nm-desc"></div>
+    <div class="note-modal-lbl">Özel Not (isteğe bağlı)</div>
+    <textarea class="note-modal-input" id="nm-note" rows="2" placeholder="Örn: Az şekerli, acele..."></textarea>
+    <div class="note-modal-btns">
+      <button class="note-modal-close" onclick="closeNoteModal()">Geri</button>
+      <button class="note-modal-add" id="nm-btn" onclick="addFromNote()">Sepete Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- DÜZENLE MODAL -->
+<div class="edit-modal-ov h" id="editModal">
+  <div class="edit-modal-box">
+    <div class="edit-modal-title">
+      <span>Ürünü Düzenle</span>
+      <button class="edit-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <input type="hidden" id="edit-id">
+    <div class="fgrid">
+      <div><div class="flbl">Ürün Adı</div><input class="fi" id="edit-name" placeholder="Ürün adı"></div>
+      <div><div class="flbl">Açıklama</div><input class="fi" id="edit-desc" placeholder="Açıklama"></div>
+      <div><div class="flbl">Fiyat (₺)</div><input class="fi" id="edit-price" type="number"></div>
+      <div><div class="flbl">Emoji</div><input class="fi" id="edit-emoji" placeholder="☕" style="width:70px"></div>
+      <div><div class="flbl">Kategori</div><input class="fi" id="edit-cat" placeholder="Kategori"></div>
+      <div><div class="flbl">İstasyon</div>
+        <select class="fi" id="edit-st">
+          <option value="bar">Bar</option>
+          <option value="mutfak">Mutfak</option>
+        </select>
+      </div>
+    </div>
+    <div class="flbl" style="margin-top:8px">Fotoğraf Değiştir</div>
+    <div class="img-upload-wrap" style="margin-top:4px">
+      <input type="file" id="edit-fimg" accept="image/*" style="display:none" onchange="previewEditImg(this)">
+      <button class="img-upload-btn" onclick="document.getElementById('edit-fimg').click()">📷 Yeni Fotoğraf Seç</button>
+      <img id="edit-fimg-preview" class="img-preview" style="display:none;margin-top:6px">
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="addbtn" style="margin-top:0" onclick="saveEditItem()">Kaydet</button>
+      <button class="addbtn" style="margin-top:0;background:var(--ink3)" onclick="closeEditModal()">İptal</button>
+    </div>
+    <div id="edit-ok" class="tag-ok" style="display:none;margin-top:8px">✓ Kaydedildi</div>
   </div>
 </div>
 
@@ -605,15 +682,15 @@ function renderGrid() {
   document.getElementById('mgrid').innerHTML = items.map(it=>{
     const q=cart[it.id]||0, opts=iOpts[it.id]||{};
     const optHTML = Object.entries(it.opts).map(([k,cs])=>cs.map(c=>`<span class="mopt ${opts[k]===c?'on':''}" onclick="setOpt(${it.id},'${k}','${c}')">${c}</span>`).join('')).join('');
-    return `<div class="mcard">
-      <div class="mcard-img">${it.image ? `<img src="${it.image}" alt="${it.name}">` : ''}${!it.image ? it.emoji : ''}</div>
+    return `<div class="mcard" onclick="openItemNote(${it.id},event)">
+      <div class="mcard-img">${it.image ? `<img src="${it.image}" alt="${it.name}" style="width:100%;height:100%;object-fit:cover">` : `<span>${it.emoji}</span>`}</div>
       <div class="mcard-body">
         <div class="mcard-top"><div class="mcard-name">${it.name}</div><div class="mcard-price">₺${it.price}</div></div>
-        <div class="mcard-desc">${it.desc}</div>
+        ${it.desc?`<div class="mcard-desc">${it.desc}</div>`:''}
         ${optHTML?`<div class="mcard-opts">${optHTML}</div>`:''}
         <div class="mcard-ctrl">
-          ${q>0?`<button class="ctrl-minus" onclick="ch(${it.id},-1)">−</button><span class="ctrl-num">${q}</span>`:`<span class="ctrl-num zero">0</span>`}
-          <button class="ctrl-plus" onclick="ch(${it.id},1)">+</button>
+          ${q>0?`<button class="ctrl-minus" onclick="ch(${it.id},-1);event.stopPropagation()">−</button><span class="ctrl-num">${q}</span>`:`<span class="ctrl-num zero">0</span>`}
+          <button class="ctrl-plus" onclick="ch(${it.id},1);event.stopPropagation()">+</button>
         </div>
       </div>
     </div>`;
@@ -621,6 +698,48 @@ function renderGrid() {
 }
 
 function setOpt(id,k,v){if(!iOpts[id])iOpts[id]={};iOpts[id][k]=v;renderGrid();}
+
+let noteItemId = null;
+function openItemNote(id, event){
+  // + ve - butonlarına tıklanınca modal açılmasın
+  if(event && event.target.classList.contains('ctrl-plus')) return;
+  if(event && event.target.classList.contains('ctrl-minus')) return;
+  if(event && event.target.classList.contains('ctrl-num')) return;
+  if(event && event.target.classList.contains('mopt')) return;
+  
+  const it = MENU.find(x=>x.id===id);
+  if(!it) return;
+  noteItemId = id;
+  
+  document.getElementById('nm-name').textContent = it.name;
+  document.getElementById('nm-price').textContent = '₺' + it.price;
+  document.getElementById('nm-desc').textContent = it.desc || '';
+  document.getElementById('nm-note').value = '';
+  
+  const img = document.getElementById('nm-img');
+  if(it.image){ img.src=it.image; img.style.display='block'; }
+  else{ img.style.display='none'; }
+  
+  const q = cart[id]||0;
+  document.getElementById('nm-btn').textContent = q>0 ? `Sepete Ekle (${q}+1)` : 'Sepete Ekle';
+  
+  document.getElementById('noteModal').classList.remove('h');
+}
+
+function closeNoteModal(){
+  document.getElementById('noteModal').classList.add('h');
+  noteItemId = null;
+}
+
+function addFromNote(){
+  if(!noteItemId) return;
+  const note = document.getElementById('nm-note').value.trim();
+  // Notu iOpts'a kaydet
+  if(!iOpts[noteItemId]) iOpts[noteItemId]={};
+  iOpts[noteItemId]._note = note;
+  ch(noteItemId, 1);
+  closeNoteModal();
+}
 function ch(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<0)cart[id]=0;renderGrid();renderRight();}
 
 function renderRight() {
@@ -839,7 +958,16 @@ function renderAdmMenu(){
       <span id="aok" class="tag-ok" style="display:none">✓ Kaydedildi</span>
     </div>
     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Mevcut Ürünler (${MENU.length})</div>
-    ${MENU.map(it=>`<div class="ami" style="${it.active?'':'opacity:.4'}"><div class="ami-em" style="position:relative;overflow:hidden">${it.image?`<img src="${it.image}" style="width:34px;height:34px;object-fit:cover;border-radius:2px">`:it.emoji}</div><div class="ami-info"><div class="ami-name">${it.name}</div><div class="ami-cat">${it.cat} · ${it.st==='bar'?'Bar':'Mutfak'}</div></div><div class="ami-price">₺${it.price}</div><button class="ami-tog" onclick="togItem(${it.id})">${it.active?'Gizle':'Göster'}</button><button class="ami-del" onclick="delItem(${it.id})">Sil</button></div>`).join('')}`;
+    ${MENU.map(it=>`<div class="ami" style="${it.active?'':'opacity:.4'}">
+      <div class="ami-em" style="position:relative;overflow:hidden;width:40px;height:40px;flex-shrink:0">
+        ${it.image?`<img src="${it.image}" style="width:40px;height:40px;object-fit:cover;border-radius:2px">`:it.emoji}
+      </div>
+      <div class="ami-info"><div class="ami-name">${it.name}</div><div class="ami-cat">${it.cat} · ${it.st==='bar'?'Bar':'Mutfak'}</div></div>
+      <div class="ami-price">₺${it.price}</div>
+      <button class="ami-edit" onclick="openEditModal(${it.id})">Düzenle</button>
+      <button class="ami-tog" onclick="togItem(${it.id})">${it.active?'Gizle':'Göster'}</button>
+      <button class="ami-del" onclick="delItem(${it.id})">Sil</button>
+    </div>`).join('')}`;
   document.getElementById('fcat').addEventListener('change',function(){document.getElementById('fnc-w').style.display=this.value==='__new__'?'block':'none';});
 }
 
@@ -859,6 +987,59 @@ function addItem(){
   renderAdmMenu();
 }
 function togItem(id){const i=MENU.find(x=>x.id===id);if(i){i.active=!i.active;saveMenu();}renderAdmMenu();}
+
+function openEditModal(id){
+  const it=MENU.find(x=>x.id===id);
+  if(!it) return;
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-name').value=it.name||'';
+  document.getElementById('edit-desc').value=it.desc||'';
+  document.getElementById('edit-price').value=it.price||'';
+  document.getElementById('edit-emoji').value=it.emoji||'';
+  document.getElementById('edit-cat').value=it.cat||'';
+  document.getElementById('edit-st').value=it.st||'bar';
+  const prev=document.getElementById('edit-fimg-preview');
+  if(it.image){prev.src=it.image;prev.style.display='block';prev.dataset.b64=it.image;}
+  else{prev.style.display='none';prev.dataset.b64='';}
+  document.getElementById('edit-ok').style.display='none';
+  document.getElementById('editModal').classList.remove('h');
+}
+
+function closeEditModal(){
+  document.getElementById('editModal').classList.add('h');
+}
+
+function previewEditImg(input){
+  if(input.files&&input.files[0]){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const prev=document.getElementById('edit-fimg-preview');
+      prev.src=e.target.result;prev.style.display='block';prev.dataset.b64=e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+async function saveEditItem(){
+  const id=parseInt(document.getElementById('edit-id').value)||document.getElementById('edit-id').value;
+  const idx=MENU.findIndex(x=>x.id==id);
+  if(idx===-1) return;
+  const prev=document.getElementById('edit-fimg-preview');
+  const image=prev&&prev.dataset.b64?prev.dataset.b64:MENU[idx].image||'';
+  MENU[idx]={
+    ...MENU[idx],
+    name:document.getElementById('edit-name').value.trim(),
+    desc:document.getElementById('edit-desc').value.trim(),
+    price:parseFloat(document.getElementById('edit-price').value)||MENU[idx].price,
+    emoji:document.getElementById('edit-emoji').value.trim()||MENU[idx].emoji,
+    cat:document.getElementById('edit-cat').value.trim(),
+    st:document.getElementById('edit-st').value,
+    image
+  };
+  await saveMenu();
+  const ok=document.getElementById('edit-ok');ok.style.display='block';
+  setTimeout(()=>{closeEditModal();renderAdmMenu();},1000);
+}
 function delItem(id){if(confirm('Bu ürünü silmek istediğinizden emin misiniz?')){MENU=MENU.filter(x=>x.id!==id);saveMenu();renderAdmMenu();}}
 
 // ── ÇAĞRI CİHAZI ──
